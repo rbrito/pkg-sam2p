@@ -1,0 +1,44 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 03_avoid_errormessage by Stefan Fritsch <sf@sfritsch.de>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: We don't have tif22pnm in debian, so we just quell the error message
+
+@DPATCH@
+
+--- sam2p-0.44-13.orig/in_tiff.cpp
++++ sam2p-0.44-13/in_tiff.cpp
+@@ -32,14 +32,7 @@
+ #endif
+   #else
+     #if OS_COTY==COTY_UNIX
+-      #if 1
+-        "(tif22pnm -rgba %S pnm: || tifftopnm %S)";
+-      #else
+-        /* Dat: not using this to suppress `sh: tif22pnm: command not found', because
+-         * it would hide precious error messages printed by tif22pnm.
+-         */
+-         "((tif22pnm -rgba %S pnm: 2>/dev/null)|| tifftopnm %S)";
+-      #endif
++      "if (type -p tiff22pnm >/dev/null); then tif22pnm -rgba %S pnm: ; else tifftopnm %S ; fi";
+     #else
+       "tif22pnm -rgba %S pnm:"; /* Wants to seek in the file. */
+     #endif
+--- sam2p-0.44-13.orig/in_png.cpp
++++ sam2p-0.44-13/in_png.cpp
+@@ -35,14 +35,7 @@
+     "png22pnm -rgba %S >%D";
+   #else
+     #if OS_COTY==COTY_UNIX
+-      #if 1
+-        "(png22pnm -rgba %S || (pngtopnm <%S && pngtopnm -alpha <%S)) >%D";
+-      #else
+-        /* Dat: not using this to suppress `sh: png22pnm: command not found', because
+-         * it would hide precious error messages printed by png22pnm.
+-         */
+-         "((png22pnm -rgba %S 2>/dev/null)|| (pngtopnm <%S && pngtopnm -alpha <%S)) >%D";
+-      #endif
++      "(if (type -p png22pnm >/dev/null); then png22pnm -rgba %S; else (pngtopnm <%S && pngtopnm -alpha <%S); fi ) >%D";
+     #else
+       "png22pnm -rgba %S >%D";
+     #endif

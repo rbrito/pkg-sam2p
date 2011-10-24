@@ -1,0 +1,83 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpatch/dpatch.make
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# These are used for cross-compiling and for saving the configure script
+# from having to guess our platform (since we know it already)
+DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+
+CFLAGS = -Wall -g
+
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+	CFLAGS += -O0
+else
+	CFLAGS += -O2
+endif
+
+patch: patch-stamp
+
+configure-stamp: patch-stamp
+	dh build --before configure
+	# Part 1 of workaround for Makedep madness
+	# (part 2 is in 06_fix_makedep.dpatch)
+	touch bts2.tth version.h
+	CFLAGS="$(CFLAGS)" ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
+		--prefix=/usr --mandir=\$${prefix}/share/man --enable-gif --enable-lzw
+	rm bts2.tth version.h
+	touch $@
+
+build: build-stamp
+build-stamp: configure-stamp
+	$(MAKE)
+	dh build --after auto_test
+	touch $@
+
+install: install-stamp
+install-stamp: build-stamp
+	dh install --before dh_auto_install
+	$(MAKE) install prefix=$(CURDIR)/debian/sam2p/usr
+	perl -0777 -p -e 's{.*?http://www.inf.bme.hu/~pts/Magic.Perl.Header\s*$$}{#!/usr/bin/perl -w}ms' \
+		< debian/sam2p_pdf_scale.pl > debian/sam2p/usr/bin/sam2p_pdf_scale
+	dh install --after dh_auto_install --before dh_installchangelogs
+	dh_installchangelogs debian.dist/changelog
+	dh_installexamples examples/*
+	dh install --after dh_installexamples
+	touch $@
+
+clean: unpatch
+	[ ! -f Makefile ] || $(MAKE) MAKE_DIST=1 clean
+	dh_clean
+
+binary-arch: install
+	dh binary-arch
+
+binary-indep: install
+	dh binary-indep
+
+binary: binary-arch binary-indep
+
+get-orig-source:
+	set -e;\
+	TMPDIR=`mktemp -dt` ;\
+	CURDIR=`pwd` ;\
+	cd $$TMPDIR ;\
+	wget http://www.inf.bme.hu/%7Epts/sam2p-latest.tar.gz ;\
+	mkdir new ;\
+	cd new ;\
+	tar -xvzf ../sam2p-latest.tar.gz ;\
+	DIR=`ls -d sam2p-*`;\
+	cd $$DIR;\
+	VERSION=`dpkg-parsechangelog|egrep "^Version:"|sed -e "s/Version: //"` ;\
+	mv debian debian.dist ;\
+	cd .. ;\
+	mv $$DIR sam2p-$$VERSION.orig ;\
+	tar -cvzf sam2p_$$VERSION.orig.tar.gz sam2p-$$VERSION.orig ;\
+	rm -r ../sam2p-latest.tar.gz sam2p-$$VERSION.orig ;\
+	cd $$CURDIR ;\
+	mv -i $$TMPDIR/new/sam2p_$$VERSION.orig.tar.gz . ;\
+	rmdir $$TMPDIR/new ;\
+	rmdir $$TMPDIR

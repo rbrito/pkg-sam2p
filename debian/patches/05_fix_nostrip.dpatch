@@ -1,0 +1,30 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 05_fix_nostrip.dpatch by Stefan Fritsch <sf@debian.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: fix DEB_BUILD_OPTIONS=nostrip
+
+@DPATCH@
+diff -urNad sam2p-0.45-3~/Makefile sam2p-0.45-3/Makefile
+--- sam2p-0.45-3~/Makefile	2007-09-03 20:52:18.676052420 +0200
++++ sam2p-0.45-3/Makefile	2007-09-03 20:52:34.897066170 +0200
+@@ -17,7 +17,7 @@
+ export PERL_BADLANG
+ 
+ CXXX=$(CXD_assert)
+-LDALL=$(LDXX) -s $(LDFLAGS) $(LIBS)
++LDALL=$(LDXX) $(LDFLAGS) $(LIBS)
+ ifeq ($(ENABLE_DEBUG), no)
+ CXXX=$(CXD_no)
+ endif
+@@ -49,8 +49,8 @@
+ IDE_TARGETS_debug := $(patsubst %,%.yes, $(TARGETS))
+ IDE_TARGETS_release := $(TARGETS)
+ 
+-CXD_assert =$(CXX) -s -O2
+-CXD_no     =$(CXX) -s -DNDEBUG -O3
++CXD_assert =$(CXX) -g -O2
++CXD_no     =$(CXX) -DNDEBUG -O3
+ # CXD_yes    =$(CXX) $(GFLAG) -lefence
+ CXD_yes    =$(CXX) $(GFLAG)
+ CXD_checker=checkerg++ $(GFLAG)
