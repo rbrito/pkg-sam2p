@@ -2,6 +2,7 @@ Source: sam2p
 Section: graphics
 Priority: optional
 Maintainer: Stefan Fritsch <sf@debian.org>
+Uploaders: Tanguy Ortolo <tanguy+debian@ortolo.eu>
 Build-Depends: debhelper (>= 7), perl, dpatch
 Homepage: http://code.google.com/p/sam2p/
 Standards-Version: 3.9.1
