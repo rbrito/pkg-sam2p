@@ -1,0 +1,62 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 05_fix_gcc_4.3_FTBFS.dpatch by Stefan Fritsch <sf@debian.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Remove ';' and some shell snippets in .c files that make GCC 4.3 fail,
+## DP: see #420983
+
+@DPATCH@
+diff -urNad trunk~/gensi.hpp trunk/gensi.hpp
+--- trunk~/gensi.hpp	2003-02-12 20:51:38.000000000 +0100
++++ trunk/gensi.hpp	2007-04-26 00:51:05.000000000 +0200
+@@ -249,7 +249,7 @@
+       if (len!=0) block(beg,len,data);
+       block(0,0,data);
+     }
+-    inline virtual void first_sub(Sub &sub) const { sub.beg=beg; sub.len=len; };
++    inline virtual void first_sub(Sub &sub) const { sub.beg=beg; sub.len=len; }
+     inline virtual void next_sub(Sub &sub) const { sub.len=0; }
+     inline char const*getCString() const { return beg; }
+     inline char const*operator()() const { return beg; }
+diff -urNad trunk~/ps_tiny.c trunk/ps_tiny.c
+--- trunk~/ps_tiny.c	2005-02-22 00:23:55.000000000 +0100
++++ trunk/ps_tiny.c	2007-04-26 00:47:27.000000000 +0200
+@@ -1,10 +1,3 @@
+-#define DUMMY \
+-set -ex; \
+-gcc -O3 -s -DNDEBUG=1 -DNO_CONFIG=1 -ansi -pedantic -Wunused \
+-  -Wall -W -Wstrict-prototypes -Wtraditional -Wnested-externs -Winline \
+-  -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wmissing-prototypes \
+-  -Wmissing-declarations ps_tiny.c -o ps_tiny; \
+-exit
+ /* ps_tiny.c -- read .pin files, write short PostScript code
+  * by pts@fazekas.hu at Sat Aug 24 12:46:14 CEST 2002
+  * -- Sat Aug 24 18:23:08 CEST 2002
+diff -urNad trunk~/pts_defl.c trunk/pts_defl.c
+--- trunk~/pts_defl.c	2005-01-18 17:05:52.000000000 +0100
++++ trunk/pts_defl.c	2007-04-26 00:47:39.000000000 +0200
+@@ -1,10 +1,3 @@
+-#define DUMMY \
+-set -ex; \
+-"${CC:-gcc}" -DNDEBUG=1 -DPTS_DEFL_MAIN -O3 -ansi \
+-  -Wall -W -Wstrict-prototypes -Wtraditional -Wnested-externs -Winline \
+-  -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wmissing-prototypes \
+-  -Wmissing-declarations pts_defl.c -o flateenc; \
+-exit
+ /*
+  * pts_defl.c -- C source file ZIP compression ripped from linux-2.6.8.1
+  * by pts@fazekas.hu at Tue Jan 18 15:19:06 CET 2005
+diff -urNad trunk~/pts_lzw.c trunk/pts_lzw.c
+--- trunk~/pts_lzw.c	2002-12-11 17:43:08.000000000 +0100
++++ trunk/pts_lzw.c	2007-04-26 00:47:46.000000000 +0200
+@@ -1,10 +1,3 @@
+-#define DUMMY \
+-set -ex; \
+-g++ -DNDEBUG=1 -O3 -ansi -pedantic \
+-  -Wall -W -Wstrict-prototypes -Wtraditional -Wnested-externs -Winline \
+-  -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wmissing-prototypes \
+-  -Wmissing-declarations pts_lzw.c -c; \
+-exit
+ /* pts_lzw.c -- a real, effective implementation of PostScript
+  *   LanguageLevel2 and PDF /LZWEncode and /LZWDecode filters (same as the LZW
+  *   compression used in TIFF raster image files)

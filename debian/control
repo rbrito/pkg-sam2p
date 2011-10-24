@@ -1,0 +1,18 @@
+Source: sam2p
+Section: graphics
+Priority: optional
+Maintainer: Stefan Fritsch <sf@debian.org>
+Build-Depends: debhelper (>= 7), perl, dpatch
+Homepage: http://code.google.com/p/sam2p/
+Standards-Version: 3.9.1
+
+Package: sam2p
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: netpbm, libjpeg-progs
+Description: convert raster images to EPS, PDF, and other formats
+ sam2p is a command line utility that converts many raster
+ (bitmap) image formats like GIF, JPG/JPEG, and PNG into
+ PostScript or PDF files. PS or EPS files created by sam2p are
+ usually not much larger than the source file.
+
