@@ -1,112 +1,86 @@
-This package was debianized by Stefan Fritsch <sf@sfritsch.de> on
-Wed, 12 Jan 2005 17:51:51 +0100.
+Format: http://anonscm.debian.org/viewvc/dep/web/deps/dep5.mdwn?revision=202&view=co
+Upstream-Name: sam2p
+Upstream-Contact: Szabó Péter <pts@fazekas.hu>
+Source: http://code.google.com/p/sam2p/downloads/list
 
-It was downloaded from http://code.google.com/p/sam2p/
+Files: *
+Copyright: 2002-2004 Szabó Péter <pts@fazekas.hu>
+License: GPL-2+
 
-Upstream Author: Szabó Péter <pts@fazekas.hu>
+Files: cgif.*
+Copyright: 1989-1996 Gershon Elber
+    1997 Eric S. Raymond
+License: MIT
 
+Files: pts_defl.*
+Copyright: 1995-1996 Jean-loup Gailly and Mark Adler
+License: Zlib
 
-Copyright:
+Files: pts_fax.*
+Copyright: 1993-1999 Aladdin Enterprises
+License: GPL-2+
 
-   2002-2004 Szabó Péter
-   
-   sam2p contains code copyright
-   
-   1989-1997 Gershon Elber and Eric S. Raymond (giflib)
-   1995-1998 Jean-loup Gailly and Mark Adler (zlib)
-   1993-1999 Aladdin Enterprises
-   1988-1997 Sam Leffler
-   1991-1997 Silicon Graphics, Inc.
-   1985-1986 The Regents of the University of California
-      
-      
-      
+Files: pts_lzw.*
+Copyright: 1985-1986 The Regents of the University of California
+    1988-1997 Sam Leffler
+    1991-1997 Silicon Graphics
+License: GPL-2+
 
-License:
+Files: debian/*
+Copyright: 2005-2011 Stefan Fritsch <sf@sfritsch.de>
+    2011 Tanguy Ortolo <tanguy+debian@ortolo.eu>
+License: GPL-2+
 
-   This package is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; version 2 dated June, 1991.
+License: GPL-2+
+ This package is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; version 2 dated June, 1991.
+ .
+ This package is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this package; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+ MA 02110-1301, USA.
+ .
+ On Debian systems, the complete text of the GNU General
+ Public License can be found in `/usr/share/common-licenses/GPL-2'.
 
-   This package is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+License: MIT
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.  
 
-   You should have received a copy of the GNU General Public License
-   along with this package; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
-   MA 02110-1301, USA.
-
-On Debian systems, the complete text of the GNU General
-Public License can be found in `/usr/share/common-licenses/GPL-2'.
-
-
-
-The giflib license is:
-
-   The GIFLIB distribution is Copyright (c) 1997  Eric S. Raymond
-
-   Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to deal
-   in the Software without restriction, including without limitation the rights
-   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-   copies of the Software, and to permit persons to whom the Software is
-   furnished to do so, subject to the following conditions:
-
-   The above copyright notice and this permission notice shall be included in
-   all copies or substantial portions of the Software.
-
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-   THE SOFTWARE.  
-
-
-The zlib license is:
-
-   Copyright (C) 1995-1998 Jean-loup Gailly and Mark Adler
-
-   This software is provided 'as-is', without any express or implied
-   warranty.  In no event will the authors be held liable for any damages
-   arising from the use of this software.
-
-   Permission is granted to anyone to use this software for any purpose,
-   including commercial applications, and to alter it and redistribute it
-   freely, subject to the following restrictions:
-
-   1. The origin of this software must not be misrepresented; you must not
-      claim that you wrote the original software. If you use this software
-      in a product, an acknowledgment in the product documentation would be
-      appreciated but is not required.
-   2. Altered source versions must be plainly marked as such, and must not be
-      misrepresented as being the original software.
-   3. This notice may not be removed or altered from any source distribution.
-
-   Jean-loup Gailly        Mark Adler
-   jloup@gzip.org          madler@alumni.caltech.edu
-
-
-The TIFF library is:
-
-   Copyright (c) 1985, 1986 The Regents of the University of California.
-   All rights reserved.
-
-   This code is derived from software contributed to Berkeley by
-   James A. Woods, derived from original work by Spencer Thomas
-   and Joseph Orost.
-
-   Redistribution and use in source and binary forms are permitted
-   provided that the above copyright notice and this paragraph are
-   duplicated in all such forms and that any documentation,
-   advertising materials, and other materials related to such
-   distribution and use acknowledge that the software was developed
-   by the University of California, Berkeley.  The name of the
-   University may not be used to endorse or promote products derived
-   from this software without specific prior written permission.
-   THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
-   IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
-   WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+License: Zlib
+ This software is provided 'as-is', without any express or implied
+ warranty.  In no event will the authors be held liable for any damages
+ arising from the use of this software.
+ .
+ Permission is granted to anyone to use this software for any purpose,
+ including commercial applications, and to alter it and redistribute it
+ freely, subject to the following restrictions:
+ .
+ 1. The origin of this software must not be misrepresented; you must not
+    claim that you wrote the original software. If you use this software
+    in a product, an acknowledgment in the product documentation would be
+    appreciated but is not required.
+ 2. Altered source versions must be plainly marked as such, and must not be
+    misrepresented as being the original software.
+ 3. This notice may not be removed or altered from any source distribution.
