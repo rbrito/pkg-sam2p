@@ -1,7 +1,5 @@
 #!/usr/bin/make -f
 
-include /usr/share/dpatch/dpatch.make
-
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
@@ -18,12 +16,10 @@ else
 	CFLAGS += -O2
 endif
 
-patch: patch-stamp
-
-configure-stamp: patch-stamp
+configure-stamp:
 	dh build --before configure
 	# Part 1 of workaround for Makedep madness
-	# (part 2 is in 06_fix_makedep.dpatch)
+	# (part 2 is in 06_fix_makedep.patch)
 	touch bts2.tth version.h
 	CFLAGS="$(CFLAGS)" ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
 		--prefix=/usr --mandir=\$${prefix}/share/man --enable-gif --enable-lzw
@@ -48,7 +44,7 @@ install-stamp: build-stamp
 	dh install --after dh_installexamples
 	touch $@
 
-clean: unpatch
+clean:
 	[ ! -f Makefile ] || $(MAKE) MAKE_DIST=1 clean
 	dh_clean
 
