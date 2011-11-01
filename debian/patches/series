@@ -1,4 +1,3 @@
-02_show_whole_version.patch
 03_avoid_errormessage.patch
 04_fix_gcc_4.3_FTBFS_420983.patch
 05_fix_nostrip.patch
