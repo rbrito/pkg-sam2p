@@ -440,7 +440,9 @@ MiniPS::Dict::Dict() { /* Sun Mar 24 21:02:41 CET 2002 */
   ty=T_DICT;
 }
 void MiniPS::Dict::free() {
-  char const*const* keyy; slen_t keylen; VALUE *val; bool touched;
+  char const*const* keyy; slen_t keylen;
+  VALUE *val = 0;  /* pacify gcc-4.2.1 by giving initial value */
+  bool touched;
   getFirst(keyy, keylen, val, touched);
   while (keyy!=(char const*const*)NULLP) {
     MiniPS::delete0(*val);
@@ -520,7 +522,9 @@ void MiniPS::Dict::dump(GenBuffer::Writable &out_, unsigned indent, bool dump_de
   if (len==0) {
     if (dump_delimiters) out_ << "<<>>";
   } else {
-    char const*const* keyy; slen_t keylen; VALUE *val; bool touched;
+    char const*const* keyy; slen_t keylen;
+    VALUE *val = 0;  /* pacify gcc-4.2.1 by giving initial value */
+    bool touched;
     indent+=2;
     char *spaces=new char[indent];
     memset(spaces, ' ', indent);
@@ -931,9 +935,9 @@ void MiniPS::scanf_dict(VALUE job, bool show_warnings, ...) {
       /* Dat: red is: (\377\0\0), (#f00), (#ff0000) */
       if (getType(got)!=T_STRING || !(
              RSTRING(got)->getLength()==3 /* Imp: `transparent -red' shouldn't work */
-          || RSTRING(got)->getLength()==4 && RSTRING(got)->begin_()[0]=='#' && !toHex3(RSTRING(got)->begin_()+1, hex3) && (got=(VALUE)new String(hex3, 3), true)
-          || RSTRING(got)->getLength()==7 && RSTRING(got)->begin_()[0]=='#' && !toHex6(RSTRING(got)->begin_()+1, hex3) && (got=(VALUE)new String(hex3, 3), true)
-          || RSTRING(got)->getLength()==6 && !toHex6(RSTRING(got)->begin_(), hex3) && (got=(VALUE)new String(hex3, 3), true)
+          || (RSTRING(got)->getLength()==4 && RSTRING(got)->begin_()[0]=='#' && !toHex3(RSTRING(got)->begin_()+1, hex3) && (got=(VALUE)new String(hex3, 3), true))
+          || (RSTRING(got)->getLength()==7 && RSTRING(got)->begin_()[0]=='#' && !toHex6(RSTRING(got)->begin_()+1, hex3) && (got=(VALUE)new String(hex3, 3), true))
+          || (RSTRING(got)->getLength()==6 && !toHex6(RSTRING(got)->begin_(), hex3) && (got=(VALUE)new String(hex3, 3), true))
          )) Error::sev(Error::EERROR) << "scanf_dict: key /" << key << " must be an RGB color triplet" << (Error*)0;
       break;
      case S_SENUM:
@@ -958,8 +962,8 @@ void MiniPS::scanf_dict(VALUE job, bool show_warnings, ...) {
       break;
      case S_PNUMBER:
       if ((got&1)==0 && getType(got)!=T_REAL) Error::sev(Error::EERROR) << "scanf_dict: key /" << key << " must be real or integer" << (Error*)0;
-      if ((got&1)!=0 && got<=Qinteger(0)
-       || getType(got)==T_REAL && RREAL(got)->getBp()<=0
+      if (((got&1)!=0 && got<=Qinteger(0))
+       || (getType(got)==T_REAL && RREAL(got)->getBp()<=0)
          ) Error::sev(Error::EERROR) << "scanf_dict: key /" << key << " must be positive" << (Error*)0;
       break;
      default:
@@ -970,7 +974,8 @@ void MiniPS::scanf_dict(VALUE job, bool show_warnings, ...) {
   va_end(ap);
   if (show_warnings) {
     // VALUE *keyy, *val;
-    char const*const* keyy; slen_t keylen; VALUE *val; bool touched;
+    char const*const* keyy; slen_t keylen; VALUE *val;
+    bool touched = false;  /* pacify gcc-4.2.1 by giving initial value */
     dict->getFirst(keyy, keylen, val, touched);
     // fprintf(stderr, "> %p\n", keyy);
     PTS_va_start(ap, show_warnings);
@@ -1014,58 +1019,63 @@ bool MiniPS::isEq(MiniPS::VALUE v, double d) {
 
 void MiniPS::dumpScale(GenBuffer::Writable &out, VALUE v) {
   double d=0;
+  ii_t ii;
   switch (getType(v)) {
-   case T_REAL: d=RREAL(v)->getBp(); break;
-   case T_INTEGER:
-    if (int2ii(v)%72==0) { out << (int2ii(v)/72); return; }
-    d=int2ii(v); break;
+   case T_REAL: d = RREAL(v)->getBp(); break;
+   case T_INTEGER: d = int2ii(v); break;
    default: Error::sev(Error::EERROR) << "dumpScale: number expected" << (Error*)0;
   }
-  char buf[64]; /* Dat: enough */
-  sprintf(buf, "%"PTS_CFG_PRINTFGLEN"g", d/72.0);
-  out << buf;
+  if (d == -72.0) d = 72.0;
+  ii = (ii_t)d / 72 * 72;
+  if (d >= 0 && ii == d) {  /* accurate nonnegative integer divisible by 72 */
+    out << (ii / 72);
+  } else if (d < 0 && d == (ii_t)d && 72 % -(ii_t)d == 0) {
+    out << (72 / -(ii_t)d);
+  } else {
+    d = d < 0 ? 72.0 / -d : d / 72.0;
+    char buf[64]; /* Dat: enough */
+    sprintf(buf, "%"PTS_CFG_PRINTFGLEN"g", d);
+    out << buf;
+  }
 }
 
 void MiniPS::dumpAdd3(GenBuffer::Writable &out, MiniPS::VALUE m, MiniPS::VALUE a, MiniPS::VALUE b, MiniPS::VALUE c, MiniPS::VALUE sub, unsigned rounding) {
   long ll;
-  #if 1
-    /* Sat Sep  7 15:30:28 CEST 2002 */
-    bool no_real_real=true;
-    double d=0, dd;
-    long l=0;
-    if (getType(m)==T_REAL && isEq(m,72)) /* Imp: not so exact comparison */
-      m=Qinteger(72);
-    MiniPS::VALUE t[5], *tt;
-    t[0]=a; t[1]=m; t[2]=b; t[3]=c; t[4]=sub;
-    for (tt=t;tt<t+5;tt++) switch (getType(*tt)) {
-     case T_REAL:
-      dd=RREAL(*tt)->getBp();
-     doadd:
-      if (no_real_real) {
-        d=l;
-        no_real_real=false;
-      }
-      if (tt==t+1) {
-        if (dd==0.0 || d==0.0) { no_real_real=true; l=0; d=0.0; }
-                          else d*=dd/72;
-      } else if (tt==t+4) d-=dd;
-      else d+=dd;
-      break;
-     case T_INTEGER:
-      ll=int2ii(*tt);
-      if (tt==t+1) {
-        if (ll%72==0) l*=ll/72;
-        else { dd=ll; goto doadd; }
-      } else if (tt==t+4) l-=ll;
-      else l+=ll;
-      break;
-     default: Error::sev(Error::EERROR) << "dumpAdd3: numbers expected" << (Error*)0;
+  /* Sat Sep  7 15:30:28 CEST 2002 */
+  bool no_real_real=true;
+  double d=0, dd;
+  long l=0;
+  if ((getType(m)==T_REAL && (isEq(m, 72) || isEq(m, -72))) || /* Imp: not so exact comparison */
+      (getType(m)==T_INTEGER && isEq(m, -72)))
+    m = Qinteger(72);
+  MiniPS::VALUE t[5], *tt;
+  t[0]=a; t[1]=m; t[2]=b; t[3]=c; t[4]=sub;
+  for (tt=t;tt<t+5;tt++) switch (getType(*tt)) {
+   case T_REAL:
+    dd=RREAL(*tt)->getBp();
+   doadd:
+    if (no_real_real) {
+      d=l;
+      no_real_real=false;
     }
-    if (no_real_real) { out << l; return; }
-  #else
-    /* Sat Sep  7 15:16:12 CEST 2002 */
-    ...
-  #endif
+    if (tt==t+1) { /* multiply by m/72 or 72/-m */
+      if (dd==0.0 || d==0.0) { no_real_real=true; l=0; d=0.0; }
+                        else d *= dd >= 0 ? dd / 72 : 72 / -dd;
+    } else if (tt==t+4) d-=dd;
+    else d+=dd;
+    break;
+   case T_INTEGER:
+    ll=int2ii(*tt);
+    if (tt==t+1) { /* multiply by m/72 or 72/-m */
+      if (ll >= 0 && ll % 72 == 0) l *= ll / 72;
+      else if (ll < 0 && 72 % -ll == 0) l *= 72 / -ll;
+      else { dd=ll; goto doadd; }
+    } else if (tt==t+4) l-=ll;
+    else l+=ll;
+    break;
+   default: Error::sev(Error::EERROR) << "dumpAdd3: numbers expected" << (Error*)0;
+  }
+  if (no_real_real) { out << l; return; }
   if (rounding!=0) {
     ll=(long)d;
     if ((double)ll<d) ll++;
