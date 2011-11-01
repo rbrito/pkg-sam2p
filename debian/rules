@@ -55,25 +55,3 @@ binary-indep: install
 	dh binary-indep
 
 binary: binary-arch binary-indep
-
-get-orig-source:
-	set -e;\
-	TMPDIR=`mktemp -dt` ;\
-	CURDIR=`pwd` ;\
-	cd $$TMPDIR ;\
-	wget http://www.inf.bme.hu/%7Epts/sam2p-latest.tar.gz ;\
-	mkdir new ;\
-	cd new ;\
-	tar -xvzf ../sam2p-latest.tar.gz ;\
-	DIR=`ls -d sam2p-*`;\
-	cd $$DIR;\
-	VERSION=`dpkg-parsechangelog|egrep "^Version:"|sed -e "s/Version: //"` ;\
-	mv debian debian.dist ;\
-	cd .. ;\
-	mv $$DIR sam2p-$$VERSION.orig ;\
-	tar -cvzf sam2p_$$VERSION.orig.tar.gz sam2p-$$VERSION.orig ;\
-	rm -r ../sam2p-latest.tar.gz sam2p-$$VERSION.orig ;\
-	cd $$CURDIR ;\
-	mv -i $$TMPDIR/new/sam2p_$$VERSION.orig.tar.gz . ;\
-	rmdir $$TMPDIR/new ;\
-	rmdir $$TMPDIR
