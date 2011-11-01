@@ -1,5 +1,0 @@
-02_show_whole_version
-03_avoid_errormessage
-04_fix_gcc_4.3_FTBFS_420983
-05_fix_nostrip.dpatch
-06_fix_makedep.dpatch
