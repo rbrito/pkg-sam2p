@@ -12,6 +12,10 @@
 #include "main.hpp"
 #include "in_jai.hpp"
 
+#ifndef SAM2P_VERSION
+#include "sam2p_version.h"
+#endif
+
 /* Sat Jul  6 16:39:19 CEST 2002
  * empirical checkerg++ helper routines for gcc version 2.95.2 20000220 (Debian GNU/Linux)
  * see c_lgcc.cpp for more
@@ -143,7 +147,7 @@ void init_applier() {
   had_init_applier=true;
 }
 
-static char *bts_ttt=
+static char bts_ttt[] =
 #include "bts2.tth"
 ;
 
@@ -902,11 +906,12 @@ void init_sam2p_engine(char const*argv0) {
   Error::long_argv0=argv0==(char const*)NULLP ? "sam2p" : argv0;
   Error::argv0=Files::only_fext(Error::long_argv0);
   Error::tmpargv0="_sam2p_";
-  Error::banner0="sam2p v0.47";
+  Error::banner0="sam2p " SAM2P_VERSION;
 }
 
 /* --- */
 
+/* Never returns. */
 void run_sam2p_engine(Files::FILEW &sout, Files::FILEW &serr, char const*const*argv1, bool helpp) {
   Error::serr=&serr;
 
@@ -927,7 +932,7 @@ void run_sam2p_engine(Files::FILEW &sout, Files::FILEW &serr, char const*const*a
     sout << "Usage:   " << Error::long_argv0 << " <filename.job>\n" <<
             "         " << Error::long_argv0 << " [options] <in.img> [OutputFormat:] <out.img>\n" <<
             "Example: " << Error::long_argv0 << " test.gif EPS: test.eps\n";
-    if (helpp) Error::cexit(0);
+    if (helpp) Error::cexit(Error::runCleanups(0));
     Error::sev(Error::EERROR) << "Incorrect command line" << (Error*)0;
   } else { /* one_liner */
     SimBuffer::B jobss;
@@ -1056,9 +1061,12 @@ void run_sam2p_engine(Files::FILEW &sout, Files::FILEW &serr, char const*const*a
   Rule::deleteProfile(rule_list);
   MiniPS::delete0(job); /* frees OutputFile etc. */
 
-  if (Error::getTopPrinted()+0<=Error::NOTICE+0) fputs("Success.\n", stderr);
+  bool successp = Error::getTopPrinted()+0<=Error::NOTICE+0;
+  int exitCode = Error::runCleanups(0);
   fflush(stdout); fflush(stderr);
-  Error::cexit(0);
+  if (successp && exitCode == 0)
+    fputs("Success.\n", stderr);
+  Error::cexit(exitCode);
 }
 
 /** main: process entry point for the sam2p utility. */
@@ -1067,12 +1075,12 @@ int main(int, char const*const* argv) {
   Files::FILEW serr(stderr);
   /* --- Initialize */
 
-  bool helpp=argv[0]==(char const*)NULLP || argv[0]!=(char const*)NULLP && argv[1]!=(char const*)NULLP && argv[2]==(char const*)NULLP && (
+  bool helpp=argv[0]==(char const*)NULLP || (argv[0]!=(char const*)NULLP && argv[1]!=(char const*)NULLP && argv[2]==(char const*)NULLP && (
              option_eq(argv[1], "-help") || 
              option_eq(argv[1], "-h") || 
              option_eq(argv[1], "-?") || 
              option_eq(argv[1], "/h") || 
-             option_eq(argv[1], "/?"));
+             option_eq(argv[1], "/?")));
   bool versionp=argv[0]!=(char const*)NULLP && argv[1]!=(char const*)NULLP && argv[2]==(char const*)NULLP && (
              option_eq(argv[1], "-version") || 
              option_eq(argv[1], "-v"));
