@@ -12,3 +12,5 @@ Makehelp
 config.h
 config.log
 config.status
+ps_tiny
+sam2p

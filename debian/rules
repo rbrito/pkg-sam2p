@@ -3,55 +3,26 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-# These are used for cross-compiling and for saving the configure script
-# from having to guess our platform (since we know it already)
-DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
-DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+%:
+	dh $@
 
-CFLAGS = -Wall -g
-
-ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
-	CFLAGS += -O0
-else
-	CFLAGS += -O2
-endif
-
-configure-stamp:
-	dh build --before configure
-	# Part 1 of workaround for Makedep madness
-	# (part 2 is in 06_fix_makedep.patch)
+override_dh_auto_configure:
 	touch bts2.tth version.h
-	CFLAGS="$(CFLAGS)" ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
-		--prefix=/usr --mandir=\$${prefix}/share/man --enable-gif --enable-lzw
+	dh_auto_configure -- --enable-gif --enable-lzw
 	rm bts2.tth version.h
-	touch $@
 
-build: build-stamp
-build-stamp: configure-stamp
-	$(MAKE)
-	dh build --after auto_test
-	touch $@
+override_dh_auto_install:
+	dh_auto_install -- prefix=$(CURDIR)/debian/sam2p/usr
 
-install: install-stamp
-install-stamp: build-stamp
-	dh install --before dh_auto_install
-	$(MAKE) install prefix=$(CURDIR)/debian/sam2p/usr
+override_dh_install:
+	dh_install
 	perl -0777 -p -e 's{.*?http://www.inf.bme.hu/~pts/Magic.Perl.Header\s*$$}{#!/usr/bin/perl -w}ms' \
 		< debian/sam2p_pdf_scale.pl > debian/sam2p/usr/bin/sam2p_pdf_scale
-	dh install --after dh_auto_install --before dh_installchangelogs
+
+override_dh_installchangelogs:
 	dh_installchangelogs debian.dist/changelog
-	dh_installexamples examples/*
-	dh install --after dh_installexamples
-	touch $@
 
-clean:
-	[ ! -f Makefile ] || $(MAKE) MAKE_DIST=1 clean
-	dh_clean
+override_dh_auto_test:
 
-binary-arch: install
-	dh binary-arch
-
-binary-indep: install
-	dh binary-indep
-
-binary: binary-arch binary-indep
+override_dh_auto_clean:
+	dh_auto_clean -- MAKE_DIST=1
