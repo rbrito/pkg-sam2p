@@ -1,10 +1,7 @@
-#! /bin/sh /usr/share/dpatch/dpatch-run
-## 06_fix_makedep.dpatch by Stefan Fritsch <sf@debian.org>
-##
-## All lines beginning with `## DP:' are a description of the patch.
-## DP: Part 2 of workaround for Makedep madness
+Description: Part 2 of workaround for Makedep madness
+Author: Stefan Fritsch <sf@debian.org>
+Last-Update: 2011-11-01
 
-@DPATCH@
 diff -urNad '--exclude=CVS' '--exclude=.svn' '--exclude=.git' '--exclude=.arch' '--exclude=.hg' '--exclude=_darcs' '--exclude=.bzr' sam2p-0.47-1~/ccdep.pl sam2p-0.47-1/ccdep.pl
 --- sam2p-0.47-1~/ccdep.pl	2008-11-15 00:08:22.000000000 +0100
 +++ sam2p-0.47-1/ccdep.pl	2011-03-02 23:34:59.776000431 +0100

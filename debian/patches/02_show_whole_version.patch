@@ -1,10 +1,7 @@
-#! /bin/sh /usr/share/dpatch/dpatch-run
-## 02_show_whole_version.dpatch by Stefan Fritsch <sf@sfritsch.de>
-##
-## All lines beginning with `## DP:' are a description of the patch.
-## DP: print whole version number, not just 0.44
+Description: Update sam2p to show version number calculated from Debian changelog
+Author: Stefan Fritsch <sf@sfritsch.de>
+Last-Update: 2011-11-01
 
-@DPATCH@
 diff -urNad sam2p-0.44-13~/Makefile sam2p-0.44-13/Makefile
 --- sam2p-0.44-13~/Makefile	2006-04-05 21:14:12.000000000 +0200
 +++ sam2p-0.44-13/Makefile	2006-04-05 21:14:29.000000000 +0200
