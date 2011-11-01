@@ -1,11 +1,8 @@
-#! /bin/sh /usr/share/dpatch/dpatch-run
-## 05_fix_gcc_4.3_FTBFS.dpatch by Stefan Fritsch <sf@debian.org>
-##
-## All lines beginning with `## DP:' are a description of the patch.
-## DP: Remove ';' and some shell snippets in .c files that make GCC 4.3 fail,
-## DP: see #420983
+Description: Remove ';' and some shell snippets in .c files that make GCC 4.3 fail
+Bug-Debian: http://bugs.debian.org/420983
+Author: Stefan Fritsch <sf@debian.org>
+Last-Update: 2011-11-01
 
-@DPATCH@
 diff -urNad trunk~/gensi.hpp trunk/gensi.hpp
 --- trunk~/gensi.hpp	2003-02-12 20:51:38.000000000 +0100
 +++ trunk/gensi.hpp	2007-04-26 00:51:05.000000000 +0200

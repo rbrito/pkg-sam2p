@@ -5,10 +5,11 @@ sam2p (0.47-1-4) UNRELEASED; urgency=low
     - add Vcs-* fields.
   * debian/watch: fix.
   * debian/copyright: switch to DEP-5 machine-readable format.
-  * debian/source/format, debian/patches: switch to dpkg-source 3.0 (quilt)
-    format
+  * debian/source/format, debian/patches, debian/rules, debian/control: switch
+    to dpkg-source 3.0 (quilt) format and stop using dpatch.
+  * debian/patches/*.patch: switch to DEP-3 tagging format.
 
- -- Tanguy Ortolo <tanguy+debian@ortolo.eu>  Tue, 01 Nov 2011 12:38:55 +0100
+ -- Tanguy Ortolo <tanguy+debian@ortolo.eu>  Tue, 01 Nov 2011 12:55:40 +0100
 
 sam2p (0.47-1-3) unstable; urgency=low
 

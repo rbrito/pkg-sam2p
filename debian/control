@@ -3,7 +3,7 @@ Section: graphics
 Priority: optional
 Maintainer: Stefan Fritsch <sf@debian.org>
 Uploaders: Tanguy Ortolo <tanguy+debian@ortolo.eu>
-Build-Depends: debhelper (>= 7), perl, dpatch
+Build-Depends: debhelper (>= 7), perl
 Homepage: http://code.google.com/p/sam2p/
 Standards-Version: 3.9.1
 Vcs-Git: git://git.debian.org/collab-maint/sam2p.git/

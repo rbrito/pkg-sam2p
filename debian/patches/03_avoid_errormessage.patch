@@ -1,10 +1,6 @@
-#! /bin/sh /usr/share/dpatch/dpatch-run
-## 03_avoid_errormessage by Stefan Fritsch <sf@sfritsch.de>
-##
-## All lines beginning with `## DP:' are a description of the patch.
-## DP: We don't have tif22pnm in debian, so we just quell the error message
-
-@DPATCH@
+Description: We don't have tif22pnm in debian, so we just quell the error message
+Author: Stefan Fritsch <sf@sfritsch.de>
+Last-Update: 2011-11-01
 
 --- sam2p-0.44-13.orig/in_tiff.cpp
 +++ sam2p-0.44-13/in_tiff.cpp
