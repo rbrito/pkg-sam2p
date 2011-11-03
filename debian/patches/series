@@ -1,4 +1,2 @@
 03_avoid_errormessage.patch
-04_fix_gcc_4.3_FTBFS_420983.patch
 05_fix_nostrip.patch
-06_fix_makedep.patch
