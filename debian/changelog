@@ -2,9 +2,12 @@ sam2p (0.49-1) UNRELEASED; urgency=low
 
   * New upstream version.
   * debian/patches/02_show_whole_version.patch: not needed anymore.
-  * debian/rules: adapt the configure workaround.
+  * debian/rules:
+    - adapt the configure workaround.
+    - stop trying to install the upstream changelog, rendered unavailable
+      since it was in the upstream debian/ directory which is dropped by dpkg.
 
- -- Tanguy Ortolo <tanguy+debian@ortolo.eu>  Thu, 03 Nov 2011 23:25:35 +0100
+ -- Tanguy Ortolo <tanguy+debian@ortolo.eu>  Thu, 03 Nov 2011 23:27:23 +0100
 
 sam2p (0.47-1-4) UNRELEASED; urgency=low
 
