@@ -7,9 +7,10 @@
 	dh $@
 
 override_dh_auto_configure:
-	touch bts2.tth version.h
+	# Work around the broken insane build system
+	touch bts2.tth sam2p_version.h stdafx.h
 	dh_auto_configure -- --enable-gif --enable-lzw
-	rm bts2.tth version.h
+	rm bts2.tth sam2p_version.h stdafx.h
 
 override_dh_auto_install:
 	dh_auto_install -- prefix=$(CURDIR)/debian/sam2p/usr
