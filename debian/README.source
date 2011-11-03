@@ -1,21 +1,54 @@
-sam2p uses dpatch to make changes to the upstream source.
+sam2p source package notes
+==========================
 
-To apply all of the patches run:
-./debian/rules patch
+Patch system
+------------
 
-To unapply all of the patches run:
-./debian/rules unpatch
+sam2p uses quilt to make changes to the upstream source, as part of the 3.0
+(quilt) source format. The patches are stored in debian/patches and applied
+automatically by dpkg-source.
 
-To add (or edit) a patch run:
-dpatch-edit-patch name_of_patch_goes_here
-#make your changes
-exit
+To list the patches run:
+    $ quilt series
 
-dpatch will make a new patch in debian/patches/ if one with that name doesn't
-already exist, otherwise it will change the existing one.  To make it get used
-add it to debian/patches/00list .
+To manually apply all the patches run:
+    $ quilt push -a
 
-To make a patch not get used remove it from debian/patches/00list .
+To manually unapply all of the patches run:
+    $ quilt pop -a
 
-The orig tarball is repacked with the original debian/ dir renamed to
-debian.dist/.
+To manually apply or unapply enough patches of the series so that a given one
+is on top run:
+    $ quilt push PATCH
+    $ quilt pop PATCH
+
+To edit a patch, put it on top then run:
+    $ quilt edit FILE
+
+To add a patch run:
+    $ quilt new PATCH
+
+When you are done editing a file within a patch run:
+    $ quilt refresh
+then edit the patch header according to DEP-3.
+
+Source content
+--------------
+
+The original tarball contains a debian directory which is removed by
+dpkg-source during the source package unpacking.
+
+Version control
+---------------
+
+The package Git repository contains an “upstream” branch which replicates the
+original tarball content. For new version it is merged into the main “master”
+branch but its debian directory must be removed as dpkg-source does, for
+instance by creating a temporary branch and making an intermediate commit:
+    $ git-import-orig ../sam2p_0.49.orig.tar.gz
+    $ git checkout -b temp upstream
+    $ git rm -r debian
+    $ git commit -m "Remove original debian directory"
+    $ git checkout master
+    $ git merge temp
+    $ git branch -d temp
