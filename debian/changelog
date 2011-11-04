@@ -9,6 +9,7 @@ sam2p (0.49-1) UNRELEASED; urgency=low
     - remove a useless DIST_CLEAN=1 in the clean feature, and work around the
       upstream make clean to keep the configure script it tries to remove.
     - remove a wrong duplicated example.
+    - add an LDFLAG to only link to needed libraries.
   * debian/patches: removed two patches which do not seem needed anymore:
     - 04_fix_gcc_4.3_FTBFS_420983.patch.
     - 06_fix_makedep.patch.
@@ -20,7 +21,7 @@ sam2p (0.49-1) UNRELEASED; urgency=low
   * debian/clean: removed unused targets.
   * debian/control: updated Standards-Version, no change needed.
 
- -- Tanguy Ortolo <tanguy+debian@ortolo.eu>  Fri, 04 Nov 2011 23:22:41 +0100
+ -- Tanguy Ortolo <tanguy+debian@ortolo.eu>  Fri, 04 Nov 2011 23:37:53 +0100
 
 sam2p (0.47-1-4) UNRELEASED; urgency=low
 
