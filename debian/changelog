@@ -18,8 +18,9 @@ sam2p (0.49-1) UNRELEASED; urgency=low
     - document the upstream Git branch use.
   * debian/changelog.upstream: keep upstream changelog here.
   * debian/clean: removed unused targets.
+  * debian/control: updated Standards-Version, no change needed.
 
- -- Tanguy Ortolo <tanguy+debian@ortolo.eu>  Fri, 04 Nov 2011 23:19:12 +0100
+ -- Tanguy Ortolo <tanguy+debian@ortolo.eu>  Fri, 04 Nov 2011 23:22:41 +0100
 
 sam2p (0.47-1-4) UNRELEASED; urgency=low
 
