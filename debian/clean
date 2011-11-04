@@ -1,3 +1,4 @@
+Makedep
 bts1.ttt
 bts2.ttt
 l1g8l.pst
@@ -6,11 +7,3 @@ l1gbl.pst
 l1gbz.pst
 l1ghl.pst
 l1ghz.pst
-version.h
-Makedep
-Makehelp
-config.h
-config.log
-config.status
-ps_tiny
-sam2p
