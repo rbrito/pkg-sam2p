@@ -6,6 +6,8 @@ sam2p (0.49-1) UNRELEASED; urgency=low
     - adapt the configure workaround.
     - stop trying to install the upstream changelog, rendered unavailable
       since it was in the upstream debian/ directory which is dropped by dpkg.
+    - remove a useless DIST_CLEAN=1 in the clean feature, and work around the
+      upstream make clean to keep the configure script it tries to remove.
   * debian/patches: removed two patches which do not seem needed anymore:
     - 04_fix_gcc_4.3_FTBFS_420983.patch.
     - 06_fix_makedep.patch.
@@ -14,7 +16,7 @@ sam2p (0.49-1) UNRELEASED; urgency=low
     - original debian directory is removed by dpkg-source.
     - document the upstream Git branch use.
 
- -- Tanguy Ortolo <tanguy+debian@ortolo.eu>  Thu, 03 Nov 2011 23:48:27 +0100
+ -- Tanguy Ortolo <tanguy+debian@ortolo.eu>  Fri, 04 Nov 2011 22:29:06 +0100
 
 sam2p (0.47-1-4) UNRELEASED; urgency=low
 

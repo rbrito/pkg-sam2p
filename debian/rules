@@ -23,4 +23,7 @@ override_dh_install:
 override_dh_auto_test:
 
 override_dh_auto_clean:
+	# Work around the annoying configure removal by make clean
+	ln configure configure.bak
 	dh_auto_clean
+	mv configure.bak configure
