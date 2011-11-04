@@ -20,6 +20,9 @@ override_dh_install:
 	perl -0777 -p -e 's{.*?http://www.inf.bme.hu/~pts/Magic.Perl.Header\s*$$}{#!/usr/bin/perl -w}ms' \
 		< debian/sam2p_pdf_scale.pl > debian/sam2p/usr/bin/sam2p_pdf_scale
 
+override_dh_installchangelogs:
+	dh_installchangelogs debian/changelog.upstream
+
 override_dh_installexamples:
 	dh_installexamples
 	# Removing a duplicate file (the other name, sam2p_fishg.job, is the
