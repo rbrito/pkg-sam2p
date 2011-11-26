@@ -1,8 +1,8 @@
 Source: sam2p
 Section: graphics
 Priority: optional
-Maintainer: Stefan Fritsch <sf@debian.org>
-Uploaders: Tanguy Ortolo <tanguy+debian@ortolo.eu>
+Maintainer: Tanguy Ortolo <tanguy+debian@ortolo.eu>
+Uploaders: Stefan Fritsch <sf@debian.org>
 Build-Depends: debhelper (>= 7.0.50~), perl
 Homepage: http://code.google.com/p/sam2p/
 Standards-Version: 3.9.2
