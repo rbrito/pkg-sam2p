@@ -24,6 +24,7 @@ sam2p (0.49-1) UNRELEASED; urgency=low
 
   [ Stefan Fritsch ]
   * Move Tanguy to Maintainer and myself to Uploaders.
+  * Set DM-Upload-Allowed: yes
 
  -- Tanguy Ortolo <tanguy+debian@ortolo.eu>  Fri, 04 Nov 2011 23:37:53 +0100
 
