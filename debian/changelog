@@ -1,6 +1,7 @@
 sam2p (0.49.1-1) unstable; urgency=low
 
   * New upstream version.
+  * debian/changelog.upstream: updated from original debian/changelog.
   * debian/clean: clean debian/sam2p_pdf_scale.1.
   * debian/control: depends on what it takes to compile DocBook to troff.
   * debian/dirs: removed (useless).
@@ -13,7 +14,7 @@ sam2p (0.49.1-1) unstable; urgency=low
   * debian/sam2p_pdf_scale.pl: removed (now provided by upstream)
   * debian/sam2p_pdf_scale.1.xml: a manpage for sam2p_pdf_scale.
 
- -- Tanguy Ortolo <tanguy+debian@ortolo.eu>  Thu, 15 Dec 2011 23:46:19 +0100
+ -- Tanguy Ortolo <tanguy+debian@ortolo.eu>  Thu, 15 Dec 2011 23:53:38 +0100
 
 sam2p (0.49-1) unstable; urgency=low
 
