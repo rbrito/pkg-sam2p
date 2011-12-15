@@ -17,7 +17,7 @@ override_dh_auto_install:
 override_dh_install:
 	dh_install
 	perl -0777 -p -e 's{.*?http://www.inf.bme.hu/~pts/Magic.Perl.Header\s*$$}{#!/usr/bin/perl -w}ms' \
-		< debian/sam2p_pdf_scale.pl > debian/sam2p/usr/bin/sam2p_pdf_scale
+		< sam2p_pdf_scale.pl > debian/sam2p/usr/bin/sam2p_pdf_scale
 
 override_dh_installchangelogs:
 	dh_installchangelogs debian/changelog.upstream

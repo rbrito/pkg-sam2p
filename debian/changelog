@@ -2,10 +2,13 @@ sam2p (0.49.1-1) unstable; urgency=low
 
   * New upstream version.
   * debian/dirs: removed (useless).
-  * debian/rules: remove a configure workaround for a problem which has been
-    fixed upstream.
+  * debian/rules:
+    - removed a configure workaround for a problem which has been fixed
+      upstream.
+    - use sam2p_pdf_scale.pl instead of debian/sam2p_pdf_scale.pl.
+  * debian/sam2p_pdf_scale.pl: removed (now provided by upstream)
 
- -- Tanguy Ortolo <tanguy+debian@ortolo.eu>  Thu, 15 Dec 2011 23:42:39 +0100
+ -- Tanguy Ortolo <tanguy+debian@ortolo.eu>  Thu, 15 Dec 2011 23:44:36 +0100
 
 sam2p (0.49-1) unstable; urgency=low
 
