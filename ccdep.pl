@@ -32,6 +32,11 @@ my $GCCP; # 'g++' or 'gcc': C/C++ preproc with `-E -MG' switches
 $GCCP="@ARGV";
 $GCCP="gcc" if $GCCP!~y/ \t//c;
 
+# Make sure we get English error messages from gcc.
+delete $ENV{LANG};
+delete $ENV{LANGUAGE};
+$ENV{LC_ALL} = "C";
+
 # ---
 
 sub find_ds() {
@@ -221,10 +226,11 @@ while ($R=~/\G(.*)\n?/g) {
   } elsif ($S=~/\A([^:]+):\d+:(\d+:)? warning: this is the location of /) {
     # ^^^ gcc-3.1
     undef $included_from;
-  } elsif ($S=~/: No such file or directory$/) {
+  } elsif ($S=~/: No such file or directory$/) {  # Depends on $ENV{LC_ALL}.
     # ^^^ gcc-3.3
     undef $included_from;
-  } elsif ($S=~/^distcc\[/) {
+  } elsif ($S eq 'compilation terminated.') {  # Useless message, ignore.
+  } elsif ($S=~/^distcc\[/) {  # Useless message, ignore.
   } else {
     die "$0: invalid depret: [$S]\n";
   }
