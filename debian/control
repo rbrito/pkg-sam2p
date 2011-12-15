@@ -3,7 +3,7 @@ Section: graphics
 Priority: optional
 Maintainer: Tanguy Ortolo <tanguy+debian@ortolo.eu>
 Uploaders: Stefan Fritsch <sf@debian.org>
-Build-Depends: debhelper (>= 7.0.50~), perl
+Build-Depends: debhelper (>= 7.0.50~), perl, docbook-xsl-ns, xsltproc
 Homepage: http://code.google.com/p/sam2p/
 Standards-Version: 3.9.2
 Vcs-Git: git://git.debian.org/collab-maint/sam2p.git/
