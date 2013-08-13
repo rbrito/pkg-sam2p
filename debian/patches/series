@@ -1,2 +1,4 @@
 03_avoid_errormessage.patch
 05_fix_nostrip.patch
+06_update-ccdep.patch
+07_fix-rule.hpp.patch

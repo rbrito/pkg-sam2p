@@ -1,0 +1,22 @@
+Description: Fix rule.hpp syntax
+ The header file rule.hpp had a syntax error, an extra comma at the end of a
+ structure definition, which was making GCC 4.8 fail. This patch simply
+ removes that comma.
+Author: Tanguy Ortolo <tanguy+debian@ortolo.eu>
+Bug-Debian: http://bugs.debian.org/701351
+Last-Update: 2013-08-13
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: sam2p/rule.hpp
+===================================================================
+--- sam2p.orig/rule.hpp	2013-08-13 10:41:38.556244045 +0200
++++ sam2p/rule.hpp	2013-08-13 11:10:47.611044681 +0200
+@@ -88,7 +88,7 @@
+       PR_PNGAuto=15,
+       PR_PNGAutoMaybe=25,
+       PR_PNGAutoBadUnsigned=45,
+-      PR_PNGAutoBadSigned=55,
++      PR_PNGAutoBadSigned=55
+     END_STATIC_ENUM()
+     pr_t Predictor;
+ 
