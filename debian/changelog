@@ -15,7 +15,7 @@ sam2p (0.49.1-2) UNRELEASED; urgency=low
      - remove obsolete field DM-Upload-Allowed.
      - switch to dh 9 for hardening.
 
- -- Tanguy Ortolo <tanguy+debian@ortolo.eu>  Fri, 16 Dec 2011 22:54:40 +0100
+ -- Tanguy Ortolo <tanguy+debian@ortolo.eu>  Tue, 13 Aug 2013 21:40:59 +0200
 
 sam2p (0.49.1-1) unstable; urgency=low
 
