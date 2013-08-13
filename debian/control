@@ -6,8 +6,8 @@ Uploaders: Stefan Fritsch <sf@debian.org>
 Build-Depends: debhelper (>= 9~), perl, docbook-xsl-ns, xsltproc
 Homepage: http://code.google.com/p/sam2p/
 Standards-Version: 3.9.2
-Vcs-Git: git://git.debian.org/collab-maint/sam2p.git/
-Vcs-Browser: http://git.debian.org/?p=collab-maint/sam2p.git
+Vcs-Git: git://anonscm.debian.org/collab-maint/sam2p.git/
+Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/sam2p.git
 
 Package: sam2p
 Architecture: any
