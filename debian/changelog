@@ -1,4 +1,4 @@
-sam2p (0.49.1-2) UNRELEASED; urgency=low
+sam2p (0.49.1-2) unstable; urgency=low
 
   * debian/sam2p.1: various small spelling and cosmetic corrections.
   * debian/sam2p_pdf_scale.1.xml: fix a typo in the copyright date.
