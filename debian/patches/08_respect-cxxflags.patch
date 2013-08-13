@@ -1,3 +1,12 @@
+Description: Make the makefile respect the exported build flags
+ The Makefile, or rather the included Makehelp, forcefully sets CXXFLAGS. This
+ patch includes the value of CPPFLAGS into it so hardening flags are taken into
+ account.
+Author: Tanguy Ortolo <tanguy+debian@ortolo.eu>
+Forwarded: not-needed
+Last-Update: 2013-08-13
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 Index: sam2p/Makehelp.in
 ===================================================================
 --- sam2p.orig/Makehelp.in	2013-08-13 13:31:31.019798641 +0200
