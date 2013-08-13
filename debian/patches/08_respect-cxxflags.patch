@@ -1,0 +1,12 @@
+Index: sam2p/Makehelp.in
+===================================================================
+--- sam2p.orig/Makehelp.in	2013-08-13 13:31:31.019798641 +0200
++++ sam2p/Makehelp.in	2013-08-13 13:34:11.710705429 +0200
+@@ -1,6 +1,6 @@
+ CXX=@CXX@
+ LDXX=@LDXX@
+-CXXFLAGS=-DHAVE_CONFIG2_H @CXXFLAGS@
++CXXFLAGS+=$(CPPFLAGS) -DHAVE_CONFIG2_H @CXXFLAGS@
+ CXXFLAGSB=@CXXFLAGSB@
+ ENABLE_DEBUG=@ENABLE_DEBUG@
+ GFLAG=@GFLAG@

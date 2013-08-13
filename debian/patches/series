@@ -2,3 +2,4 @@
 05_fix_nostrip.patch
 06_update-ccdep.patch
 07_fix-rule.hpp.patch
+08_respect-cxxflags.patch
