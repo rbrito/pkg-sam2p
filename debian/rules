@@ -38,6 +38,7 @@ override_dh_auto_test:
 
 override_dh_auto_clean:
 	# Work around the annoying configure removal by make clean
+	rm -f configure.bak
 	ln configure configure.bak
 	dh_auto_clean
 	mv configure.bak configure
