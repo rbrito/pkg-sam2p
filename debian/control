@@ -5,7 +5,7 @@ Maintainer: Tanguy Ortolo <tanguy+debian@ortolo.eu>
 Uploaders: Stefan Fritsch <sf@debian.org>
 Build-Depends: debhelper (>= 9~), perl, docbook-xsl-ns, xsltproc
 Homepage: http://code.google.com/p/sam2p/
-Standards-Version: 3.9.2
+Standards-Version: 3.9.4
 Vcs-Git: git://anonscm.debian.org/collab-maint/sam2p.git/
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/sam2p.git
 
