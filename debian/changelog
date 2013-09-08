@@ -1,6 +1,9 @@
 sam2p (0.49.2-1) UNRELEASED; urgency=low
 
   * New upstream version. (Closes: #721142)
+  * debian/patches: remove patches integrated by upstream
+     - 06_update-ccdep.patch
+     - 07_fix-rule.hpp.patch
 
  -- Tanguy Ortolo <tanguy+debian@ortolo.eu>  Sun, 08 Sep 2013 18:47:53 +0200
 
