@@ -203,7 +203,7 @@ inline static unsigned typerr() { assert(0); return 0; }
 
 unsigned MiniPS::getType(VALUE v) {
   return (v&1)!=0 ? T_INTEGER
-       : v>Qmax_ ? RVALUE(v)->getType()
+       : v+0U>Qmax_+0U ? RVALUE(v)->getType()
        : v==Qnull ? T_NULL+0/*avoid gcc-3.0 ld bug*/
        : T_BOOLEAN;
 }
@@ -219,7 +219,7 @@ void MiniPS::delete0(VALUE v) {
   if (ty==T_DICT) RDICT(v)->free();
   else if (ty==T_ARRAY) RARRAY(v)->free();
   else if (ty==T_VOID) ;
-  else if (vp->hasPtr()) delete [] (char*)vp->begin_();
+  else if (vp->hasPtr()) delete [] vp->begin_();
   delete vp; /* BUGFIX at Sat Sep  7 12:50:13 CEST 2002 */
 }
 void MiniPS::dump(VALUE v, unsigned indent) {
@@ -790,6 +790,7 @@ MiniPS::VALUE MiniPS::Parser::parse1(int closer, int sev) {
    from_master:
     /* vvv EOF_ALLOWED means: the master cannot close our open '>' or ']' */
     if ((v=master->parse1(EOF_ALLOWED, sev))!=Qundef) return v;
+    delete0(v);
     delete master;
     master=(Parser*)NULLP;
     // fprintf(stderr, "closed master\n");
@@ -818,9 +819,12 @@ MiniPS::VALUE MiniPS::Parser::parse1(int closer, int sev) {
      /* Process external file inclusion */
      assert(master==NULLP);
      /* Imp: prevent infinite recursion */
-     if (specRuns!=NULLP && Qundef!=(w=specRuns->get(RSTRING(v)->begin_(), RSTRING(v)->getLength())))
+     if (specRuns!=NULLP && Qundef!=(w=specRuns->get(RSTRING(v)->begin_(), RSTRING(v)->getLength()))) {
        master=new Parser((GenBuffer::Readable*)RVOID(w)->getPtr());
-       else master=new Parser(RSTRING(v)->getCstr());
+     } else {
+       master=new Parser(RSTRING(v)->getCstr());  /* Open external file. */
+     }
+     delete0(v);
      master->setDepth(depth+1);
      master->setSpecRuns(specRuns);
      goto from_master;
@@ -881,11 +885,15 @@ MiniPS::VALUE MiniPS::Parser::parse1(int closer, int sev) {
       if (Qundef==(key=parse1('>', sev))) break;
       if (key==Qerror) return Qerror;
       if (getType(key)!=T_SNAME) {
+        MiniPS::delete0(key);
         Error::sev(Error::EERROR) << "MiniPS::Parser: dict key must be a /name" << (Error*)0;
         return Qerror;
       }
       val=parse1(EOF_ILLEGAL_POP, sev); /* No EOF allowed here */
-      if (val==Qerror) return Qerror;
+      if (val==Qerror) {
+        MiniPS::delete0(key);
+        return Qerror;
+      }
       if (val!=Qpop) {
         // if (Qundef!=ap->push(RSNAME(key)->begin_(),RSNAME(key)->getLength(),val)) Error::sev(Error::EERROR) << "MiniPS::Parser: duplicate dict key" << (Error*)0;
         /* ^^^ should free if non-fatal error */
