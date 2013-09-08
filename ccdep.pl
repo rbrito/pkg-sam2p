@@ -137,13 +137,20 @@ sub backtick(@) {
 
 my @DS=find_ds();
 my @DSQ=map{shq$_}@DS;
-my $R="$GCCP -DOBJDEP -M -MG -E 2>&1 @DSQ";
-$R=backtick($R);
+my $DIAG=" -fno-diagnostics-show-caret";
+my $Q="$GCCP -DOBJDEP$DIAG -M -MG -E 2>&1 @DSQ";
+my $R=backtick($Q);
+if ($R=~/\berror: .*-fno-diagnostics-show-caret\b/) {
+  # gcc-4.6 and earlier don't have this flag, and they fail.
+  $Q=~s@ -fno-diagnostics-show-caret(?=\s)@@;
+  $DIAG="";
+  $R=backtick($Q);
+}
 
 if ($R!~/: warning: #warning\b/) {
   # config2.h:314:4: warning: #warning REQUIRES: c_lgcc3.o
   # Dat: g++-3.3 ignores #warning with -M -MG -E
-  $R.="\n".backtick("$GCCP -DOBJDEP -E 2>&1 >/dev/null @DSQ");
+  $R.="\n".backtick("$GCCP -DOBJDEP$DIAG -E 2>&1 >/dev/null @DSQ");
 }
 
 ## die $R;
@@ -231,6 +238,8 @@ while ($R=~/\G(.*)\n?/g) {
     undef $included_from;
   } elsif ($S eq 'compilation terminated.') {  # Useless message, ignore.
   } elsif ($S=~/^distcc\[/) {  # Useless message, ignore.
+  } elsif ($S=~/^ *#/) {  # Useless message from gcc 4.8, ignore.
+  } elsif ($S=~/^ *\^/) {  # Useless message from gcc 4.8, ignore.
   } else {
     die "$0: invalid depret: [$S]\n";
   }
