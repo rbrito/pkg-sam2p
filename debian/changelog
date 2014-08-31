@@ -1,4 +1,4 @@
-sam2p (0.49.2-3) UNRELEASED; urgency=medium
+sam2p (0.49.2-3) unstable; urgency=medium
 
   * debian/sam2p.1: correct the documentation of -m:dpi:RES and document
     -m:dpi:-RES. (Closes: #619824)
