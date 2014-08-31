@@ -2,7 +2,6 @@ Source: sam2p
 Section: graphics
 Priority: optional
 Maintainer: Tanguy Ortolo <tanguy+debian@ortolo.eu>
-Uploaders: Stefan Fritsch <sf@debian.org>
 Build-Depends: debhelper (>= 9~), perl, docbook-xsl-ns, xsltproc
 Homepage: http://code.google.com/p/sam2p/
 Standards-Version: 3.9.5
