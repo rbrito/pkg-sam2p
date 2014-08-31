@@ -2,6 +2,7 @@ sam2p (0.49.2-3) UNRELEASED; urgency=medium
 
   * debian/sam2p.1: correct the documentation of -m:dpi:RES and document
     -m:dpi:-RES. (Closes: #619824)
+  * debian/control: update Standards-Version to 3.9.5 (no change needed).
 
  -- Tanguy Ortolo <tanguy+debian@ortolo.eu>  Sun, 31 Aug 2014 18:06:07 +0200
 
