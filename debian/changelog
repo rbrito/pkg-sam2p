@@ -7,6 +7,7 @@ sam2p (0.49.2-4) UNRELEASED; urgency=medium
   * Drop fields with obsolete URLs.
   * Bump debhelper from deprecated 9 to 10.
   * Use canonical URL in Vcs-Git.
+  * Avoid explicitly specifying -Wl,--as-needed linker flag.
 
  -- Rogério Brito <rbrito@gmail.com>  Fri, 26 Feb 2021 20:29:59 -0000
 
