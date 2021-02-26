@@ -3,7 +3,7 @@ Section: graphics
 Priority: optional
 Maintainer: Rogério Brito <rbrito@gmail.com>
 Build-Depends:
- debhelper (>= 9~),
+ debhelper (>= 10~),
  docbook-xsl-ns,
  perl,
  xsltproc
