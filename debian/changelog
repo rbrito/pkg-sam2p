@@ -6,6 +6,7 @@ sam2p (0.49.2-4) UNRELEASED; urgency=medium
   * Use secure URI in Homepage field.
   * Drop fields with obsolete URLs.
   * Bump debhelper from deprecated 9 to 10.
+  * Use canonical URL in Vcs-Git.
 
  -- Rogério Brito <rbrito@gmail.com>  Fri, 26 Feb 2021 20:29:59 -0000
 
