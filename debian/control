@@ -1,7 +1,7 @@
 Source: sam2p
 Section: graphics
 Priority: optional
-Maintainer: Tanguy Ortolo <tanguy+debian@ortolo.eu>
+Maintainer: Rogério Brito <rbrito@gmail.com>
 Build-Depends:
  debhelper (>= 9~),
  docbook-xsl-ns,
