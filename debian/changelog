@@ -2,6 +2,7 @@ sam2p (0.49.2-4) UNRELEASED; urgency=medium
 
   * Trim trailing whitespace.
   * Use versioned copyright format URI.
+  * Update watch file format version to 4.
 
  -- Rogério Brito <rbrito@gmail.com>  Fri, 26 Feb 2021 20:29:59 -0000
 
