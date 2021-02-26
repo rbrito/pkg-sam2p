@@ -1,4 +1,4 @@
-Format: http://anonscm.debian.org/viewvc/dep/web/deps/dep5.mdwn?revision=202&view=co
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: sam2p
 Upstream-Contact: Szabó Péter <pts@fazekas.hu>
 Source: http://code.google.com/p/sam2p/downloads/list
