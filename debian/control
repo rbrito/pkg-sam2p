@@ -7,7 +7,6 @@ Build-Depends:
  docbook-xsl-ns,
  perl,
  xsltproc
-Homepage: https://code.google.com/p/sam2p/
 Standards-Version: 3.9.5
 Vcs-Git: https://github.com/rbrito/pkg-sam2p
 Vcs-Browser: https://github.com/rbrito/pkg-sam2p
