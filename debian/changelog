@@ -1,17 +1,25 @@
-sam2p (0.49.2-4) UNRELEASED; urgency=medium
+sam2p (0.49.2-4~1.gbp86f2a0) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @86f2a0f355997f1609b6547819ecf70d2540953d **
 
   * Trim trailing whitespace.
-  * Use versioned copyright format URI.
-  * Update watch file format version to 4.
-  * Use secure URI in Homepage field.
-  * Drop fields with obsolete URLs.
-  * Bump debhelper from deprecated 9 to 10.
-  * Use canonical URL in Vcs-Git.
-  * Avoid explicitly specifying -Wl,--as-needed linker flag.
-  * Set upstream metadata fields: Bug-Database, Bug-Submit, Repository,
-    Repository-Browse.
+  * debian/control:
+    + Set me as maintainer.
+    + Set Vcs-* fields to my repos.
+    + Set new Homepage field.
+    + Bump debhelper from deprecated 9 to 10.
+    + Use canonical URL in Vcs-Git.
+  * debian/copyright:
+    + Add my copyright years.
+    + Use versioned copyright format URI.
+  * debian/watch:
+    + Update watch file format version to 4.
+  * debian/rules:
+    + Avoid explicitly specifying -Wl,--as-needed linker flag.
+  * debian/upstream: Set metadata fields: Bug-Database, Bug-Submit,
+    Repository, Repository-Browse.
 
- -- Rogério Brito <rbrito@gmail.com>  Fri, 26 Feb 2021 20:29:59 -0000
+ -- Rogério Brito <rbrito@gmail.com>  Fri, 26 Feb 2021 20:47:02 -0300
 
 sam2p (0.49.2-3) unstable; urgency=medium
 
