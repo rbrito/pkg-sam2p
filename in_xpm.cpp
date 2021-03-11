@@ -5,7 +5,9 @@
 /* Imp: test this code with various xpm files! */
 
 #ifdef __GNUC__
+#ifndef __clang__
 #pragma implementation
+#endif
 #endif
 
 #include "image.hpp"
@@ -228,7 +230,7 @@ static Image::Sampled *in_xpm_reader(Image::Loader::UFD *ufd, SimBuffer::Flat co
   int i; /* multiple purpose */
   while ((i=tok.getcc())==' ' || i=='\t' || USGE(9,i-'0')) ;
   tok.ungetcc(i); tok.getComma();
-  
+
   // Error::sev(Error::DEBUG) << "wd="<<wd<<" ht="<<ht<<" colors="<<colors<<" cpp="<<cpp << (Error*)0;
   if (1UL*cpp*colors>65535) Error::sev(Error::EERROR) << "XPM: too many colors" << (Error*)0;
   // if (cpp==1) {
@@ -261,7 +263,7 @@ static Image::Sampled *in_xpm_reader(Image::Loader::UFD *ufd, SimBuffer::Flat co
     if (transp!=colors) Error::sev(Error::WARNING) << "XPM: too many colors, transparency blacked" << (Error*)0;
   }
   outbuf=ret->getRowbeg();
-  
+
   if (cpp==1) { /* Easy job: make an Indexed image; defer .packPal() */
     assert(colors<=256);
     signed short bin[256], s;
@@ -285,14 +287,14 @@ static Image::Sampled *in_xpm_reader(Image::Loader::UFD *ufd, SimBuffer::Flat co
     memset(bin, 255, sizeof(*bin) * 65536); /* Make bin[*]=-1 */
     for (i=0,p=tab; (unsigned)i<colors; i++, p+=2) {
       iimg->setPal(i, rgb[i]);
-      bin[(p[0]<<8)+p[1]]=i;
+      bin[(((unsigned char*)p)[0]<<8)+((unsigned char*)p)[1]]=i;
     }
     assert(p==pend);
     while (ht--!=0) {
       tok.getComma();
       for (p=outbuf+ret->getRlen(); outbuf!=p; ) {
         tok.readInStr(pend,2);
-        if ((s=bin[(pend[0]<<8)+pend[1]])<0) Error::sev(Error::EERROR) << "XPM: unpaletted color" << (Error*)0;
+        if ((s=bin[(((unsigned char*)pend)[0]<<8)+((unsigned char*)pend)[1]])<0) Error::sev(Error::EERROR) << "XPM: unpaletted color" << (Error*)0;
         *outbuf++=s;
       }
     }
@@ -301,12 +303,12 @@ static Image::Sampled *in_xpm_reader(Image::Loader::UFD *ufd, SimBuffer::Flat co
     Image::Sampled::rgb_t rgb1;
     unsigned short *bin=new unsigned short[65536], s;
     memset(bin, 255, sizeof(*bin) * 65536); /* Make bin[*]=max */
-    for (i=0,p=tab; (unsigned)i<colors; i++, p+=2) bin[(p[0]<<8)+p[1]]=i;
+    for (i=0,p=tab; (unsigned)i<colors; i++, p+=2) bin[(((unsigned char*)p)[0]<<8)+((unsigned char*)p)[1]]=i;
     while (ht--!=0) {
       tok.getComma();
       for (p=outbuf+ret->getRlen(); outbuf!=p; ) {
         tok.readInStr(pend,2);
-        if ((s=bin[(pend[0]<<8)+pend[1]])==(unsigned short)-1) Error::sev(Error::EERROR) << "XPM: unpaletted color" << (Error*)0;
+        if ((s=bin[(((unsigned char*)pend)[0]<<8)+((unsigned char*)pend)[1]])==(unsigned short)-1) Error::sev(Error::EERROR) << "XPM: unpaletted color" << (Error*)0;
         *outbuf++=(rgb1=rgb[s])>>16;
         *outbuf++=rgb1>>8;
         *outbuf++=rgb1;
@@ -388,7 +390,7 @@ static Image::Sampled *in_xpm_reader(Image::Loader::UFD *ufd, SimBuffer::Flat co
       }
     }
    #endif
-  } 
+  }
   delete [] tab;
   delete [] rgb;
   /* Dat: we don't check for EOF. Imp: emit a warning? */

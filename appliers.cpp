@@ -6,7 +6,9 @@
  */
 
 #ifdef __GNUC__
+#ifndef __clang__
 #pragma implementation
+#endif
 #endif
 
 #include "rule.hpp"
@@ -71,7 +73,7 @@ Rule::Applier::cons_t out_l1fa85g_work(GenBuffer::Writable& out, Rule::OutputRul
   /* by pts@fazekas.hu at Sun Mar 17 15:52:48 CET 2002 */
   // Imp: two other TransferEncodings [no more, since #if 0]
   if (out_l1fa85g_check_rule(or_)!=Rule::Applier::OK) return Rule::Applier::DONT_KNOW;
-  if (!or_->cache.isPSL3()) 
+  if (!or_->cache.isPSL3())
     Error::sev(Error::WARNING_DEFER) << "l1fa85g: /ZIP without /PSL3 will be slow" << (Error*)0;
   or_->doSampleFormat(sf);
   PSEncoder *bp=PSEncoder::newASCII85Encode(out, or_->cacheHints.TransferCPL);
@@ -289,7 +291,7 @@ Rule::Applier::cons_t out_l23_work(GenBuffer::Writable& out, Rule::OutputRule*or
   GenBuffer::Writable *tp=vp;
        if (cache->TransferEncoding==cache->TE_A85) tp=PSEncoder::newASCII85Encode (*vp, or_->cacheHints.TransferCPL);
   else if (cache->TransferEncoding==cache->TE_Hex) tp=PSEncoder::newASCIIHexEncode(*vp, or_->cacheHints.TransferCPL);
-  
+
   GenBuffer::Writable *cp=tp;
   switch (cache->Compression) {
    case Rule::Cache::CO_None: break;
@@ -316,7 +318,7 @@ Rule::Applier::cons_t out_l23_work(GenBuffer::Writable& out, Rule::OutputRule*or
 
   #if 0 /* Sun Sep 22 20:40:51 CEST 2002 */
     if (cp!=tp) strcpy(closes," F closefile"); else closes[0]='\0';
-    if (tp!=vp) strcpy(closes+strlen(closes)," T closefile"); 
+    if (tp!=vp) strcpy(closes+strlen(closes)," T closefile");
   #endif
 
   strings[1]=colorSpace.term0()();
@@ -657,6 +659,7 @@ Rule::Applier::cons_t out_xpm_work(GenBuffer::Writable& out, Rule::OutputRule*or
       while (p!=phend) { *++op=xpms[*p>>2]; *++op=xpms[*p++&3]; }
       out.vi_write(obuf, 2*wd+4);
     }
+    delete [] obuf;
   } else {
     coline3[1]='"';
     while (p!=pend) {
@@ -688,6 +691,7 @@ Rule::Applier::cons_t out_xpm_work(GenBuffer::Writable& out, Rule::OutputRule*or
       while (p!=phend) *++op=xpms[0U+*p++];
       out.vi_write(obuf, wd+4);
     }
+    delete [] obuf;
   }
   assert(p==pend);
   out << "};\n";
@@ -757,7 +761,7 @@ Rule::Applier::cons_t out_pnm_work(GenBuffer::Writable& out, Rule::OutputRule*or
   out << Error::banner0;
   Image::Sampled *img=sf->getImg();
   out << '\n' << img->getWd() << ' ' << img->getHt();
-  out << " 255\n"+(sfo==Image::SF_Gray1?4:0);
+  out << &(" 255\n"[sfo==Image::SF_Gray1?4:0]);
   /* ^^^ SF_Gray1 BUGFIX at Tue Jun  4 21:44:17 CEST 2002 */
   register char *p=img->getRowbeg(), *t=(char*)NULLP;
   slen_t len=img->getRlen()*img->getHt();
@@ -892,7 +896,7 @@ Rule::Applier::cons_t out_xwd_work(GenBuffer::Writable& out, Rule::OutputRule*or
   /*visual_class*/ (p+=4)[-1]=sfo==Image::SF_Rgb8 ? DirectColor : sfo==Image::SF_Indexed8 ? PseudoColor : StaticGray;
   /*red_mask  */ (p+=4)[-3]=(char)(sfo==Image::SF_Rgb8 ? 255 : 0);
   /*green_mask*/ (p+=4)[-2]=(char)(sfo==Image::SF_Rgb8 ? 255 : 0);
-  /*blue_mask */ (p+=4)[-1]=(char)(sfo==Image::SF_Rgb8 ? 255 : 0); 
+  /*blue_mask */ (p+=4)[-1]=(char)(sfo==Image::SF_Rgb8 ? 255 : 0);
   /*bits_per_rgb*/ (p+=4)[-1]=sfo==Image::SF_Rgb8 ? 24 : 8;
   /*colormap_entries*/ (p+=4)[-2]=1; /*256*/
   /*ncolors*/ mf32(p, ncolors=sfo==Image::SF_Rgb8 ? 0 : sfo==Image::SF_Indexed8 ? ((Image::Indexed*)img)->getNcols() : 256);
@@ -999,7 +1003,7 @@ Rule::Applier::cons_t out_jpeg_work(GenBuffer::Writable& out, Rule::OutputRule*o
     cp=PSEncoder::newDCTIJGEncode(out, or_->cacheHints.EncoderColumns, or_->cacheHints.EncoderRows, or_->cacheHints.EncoderColors, or_->cacheHints.Quality);
   }
   Rule::writePalData(out, *cp, sf);
-  delete cp; 
+  delete cp;
   return Rule::Applier::OK;
 }
 
@@ -1138,7 +1142,7 @@ void TIFFPrinter::aLONG (SimBuffer::B &s, unsigned count, slen_t const*val) {
 void TIFFPrinter::dirSHORT(unsigned short const tag, slen_t const count, unsigned short const*val) {
   slen_t offs;
   aSHORT(dir, 1U, &tag);
-  dir.vi_write("\0\3"+(le?1:0), 2);
+  dir.vi_write(&("\0\3"[le?1:0]), 2);
   aLONG(dir, 1U, &count);
   switch (count) {
     case 0: dir.vi_write("\0\0\0", 4); break;
@@ -1150,7 +1154,7 @@ void TIFFPrinter::dirSHORT(unsigned short const tag, slen_t const count, unsigne
 void TIFFPrinter::dirLONG(unsigned short const tag, slen_t const count, slen_t const*val) {
   slen_t offs;
   aSHORT(dir, 1U, &tag);
-  dir.vi_write("\0\4"+(le?1:0), 2);
+  dir.vi_write(&("\0\4"[le?1:0]), 2);
   aLONG(dir, 1U, &count);
   switch (count) {
     case 0: dir.vi_write("\0\0\0", 4); break;
@@ -1161,7 +1165,7 @@ void TIFFPrinter::dirLONG(unsigned short const tag, slen_t const count, slen_t c
 void TIFFPrinter::dirRATIONAL(unsigned short tag, slen_t count, slen_t const*val) {
   slen_t offs;
   aSHORT(dir, 1U, &tag);
-  dir.vi_write("\0\5"+(le?1:0), 2);
+  dir.vi_write(&("\0\5"[le?1:0]), 2);
   aLONG(dir, 1U, &count);
   switch (count) {
     case 0: dir.vi_write("\0\0\0", 4); break;
@@ -1171,7 +1175,7 @@ void TIFFPrinter::dirRATIONAL(unsigned short tag, slen_t count, slen_t const*val
 void TIFFPrinter::dirUNDEFINED(unsigned short tag, slen_t count, char const*val) {
   slen_t offs;
   aSHORT(dir, 1U, &tag);
-  dir.vi_write("\0\7"+(le?1:0), 2);
+  dir.vi_write(&("\0\7"[le?1:0]), 2);
   aLONG(dir, 1U, &count);
   if (count<=4) {
     dir.vi_write(val, count);
@@ -1183,7 +1187,7 @@ void TIFFPrinter::dirUNDEFINED(unsigned short tag, slen_t count, char const*val)
 void TIFFPrinter::dirUNDEFINED(unsigned short tag, slen_t count, char const*val, slen_t count2, char const*val2) {
   slen_t offs, countx=count+count2;
   aSHORT(dir, 1U, &tag);
-  dir.vi_write("\0\7"+(le?1:0), 2);
+  dir.vi_write(&("\0\7"[le?1:0]), 2);
   aLONG(dir, 1U, &countx);
   if (countx<=4) {
     dir.vi_write(val, count);
@@ -1266,7 +1270,7 @@ Rule::Applier::cons_t out_tiffjai_work(GenBuffer::Writable& out, Rule::OutputRul
   tp.getS().vi_write(databeg, datalen); /* DataPart */
   // tp.getS().vi_write("\xFF\xD9", 2); /* fake-EOI */
   /* ^^^ there must be an EOI already */
-  
+
   unsigned phot=0;  bool inks=false, refe=false;
   switch (cs) {
     case Image::Sampled::CS_GRAYSCALE: phot=tp.PHOTOMETRIC_MINISBLACK; break;
@@ -1516,11 +1520,16 @@ Rule::Applier::cons_t out_tiff_work(GenBuffer::Writable& out, Rule::OutputRule*o
       slen_t writelen;
       char *buf=(char*)NULLP;
       char const*psave=img->getRowbeg(), *p, *ppend=psave+rlenht;
-      char const*r=alpha->getRowbeg(), *rend;
+      char const*r=alpha->getRowbeg();
+#ifndef NDEBUG
+      char const*rend;
+      Image::Sampled::dimen_t rlena=(wd+7)>>3;
+#endif
       char *t;
       register unsigned u;
-      Image::Sampled::dimen_t rlena=(wd+7)>>3;
+#ifndef NDEBUG
       assert(rlena==alpha->getRlen());
+#endif
       // printf("SF=%u\n", cache->SampleFormat);
       if (cache->isGray()) {
         /* works at Mon Dec  9 01:25:59 CET 2002 */
@@ -1528,10 +1537,14 @@ Rule::Applier::cons_t out_tiff_work(GenBuffer::Writable& out, Rule::OutputRule*o
         static unsigned char const szor2[16]={85,84,81,80,69,68,65,64,21,20,17,16,5,4,1,0};
         // static unsigned char const szor2[8]={0,1,16,17,64,65,80,81};
         buf=new char[(writelen=((slen_t)wd*bpc+3)>>2)+24];
+#ifndef NDEBUG
         assert(rlena*8>=rlen);
+#endif
         while (psave!=ppend) {
           t=buf;
+#ifndef NDEBUG
           rend=r+rlena;
+#endif
           p=psave; psave+=rlen;
           assert(psave<=ppend);
           u=(1<<16);
@@ -1578,7 +1591,9 @@ Rule::Applier::cons_t out_tiff_work(GenBuffer::Writable& out, Rule::OutputRule*o
           p=psave; psave+=rlen;
           assert(psave<=ppend);
           u=(1<<16);
+#ifndef NDEBUG
           rend=r+rlena; /* superfluous */
+#endif
           switch (bpc) {
            case 8:
             while (p<psave) {
@@ -1624,7 +1639,9 @@ Rule::Applier::cons_t out_tiff_work(GenBuffer::Writable& out, Rule::OutputRule*o
             }
            break;
           } /* SWITCH RGB bpc */
+#ifndef NDEBUG
           assert(r==rend); // r=rend;
+#endif
           pp->vi_write(buf, writelen);
         }
       }
@@ -1654,7 +1671,7 @@ Rule::Applier::cons_t out_tiff_work(GenBuffer::Writable& out, Rule::OutputRule*o
 //  tp.dirSL(tp.ImageWidth, img->getWd()/2);
   tp.dirSL(tp.ImageLength, img->getHt());
   unsigned short s4[]={img->getBpc(),img->getBpc(),img->getBpc(),img->getBpc()};
-  /* ^^^ these values may be different according to the TIFF6 spec, but 
+  /* ^^^ these values may be different according to the TIFF6 spec, but
    * libtiff can read TIFF files only with same BitsPerSamples.
    */
   unsigned sppa=img->getCpp()+(alpha!=NULLP ? 1:0);
@@ -1704,7 +1721,7 @@ Rule::Applier::cons_t out_tiff_work(GenBuffer::Writable& out, Rule::OutputRule*o
     delete alpha;
   }
   /* no tp.InkSet, because no CMYK */
-  
+
   if (compr==tp.COMPRESSION_JPEG) {
     tp.dirUNDEFINED(tp.JPEGTables, jp->getJPEGTables().getLength(), jp->getJPEGTables()() /* , 2, "\xFF\xD9" */);
     const unsigned char hvs=jp->getHVS();
@@ -1716,7 +1733,7 @@ Rule::Applier::cons_t out_tiff_work(GenBuffer::Writable& out, Rule::OutputRule*o
     if (refe) tp.dirRATIONAL(tp.ReferenceBlackWhite, 6, rats+2);
     delete jp;
   }
-  
+
   tp.dirClose();
   return Rule::Applier::OK;
 }
@@ -1764,7 +1781,7 @@ void LenCRC32Encode::vi_write(char const*buf, slen_t len) {
 /** PNG output (RFC 2083) */
 Rule::Applier::cons_t out_png_check_rule(Rule::OutputRule* or_) {
   /* Supported PNG types: /Gray1, /Gray2, /Gray4, /Gray8, /Rgb8,
-   *   /Indexed1, /Indexed2, /Indexed4, /Indexed8. 
+   *   /Indexed1, /Indexed2, /Indexed4, /Indexed8.
    * Unsupported PNG types: /Gray16, /Rgb16, /GrayA8, /GrayA16, /RgbA8,
    *   /RgbA16.
    * /Indexed* supports transparency (via PNG chunk tRNS).
@@ -1804,14 +1821,14 @@ Rule::Applier::cons_t out_png_work(GenBuffer::Writable& out, Rule::OutputRule*or
   Rule::Cache *cache=&or_->cache;
   char tmp[64], colortype; register char*p;
   unsigned PTS_INT32_T crc;
-  
+
   // assert(0);
   if (out_png_check_rule(or_)!=Rule::Applier::OK) return Rule::Applier::DONT_KNOW;
   or_->doSampleFormat(sf);
   Image::Sampled *img=sf->getImg();
   unsigned char bpc=img->getBpc(); /* set _after_ doSampleFormat */
   Image::Sampled::dimen_t wd=img->getWd(), ht=img->getHt();
-  
+
   GenBuffer::Writable *rp=new LenCRC32Encode(out,4);
   GenBuffer::Writable *cp=PSEncoder::newFlateEncode(*rp, (cache->Compression==Rule::Cache::CO_None) ? 0: or_->cacheHints.Effort);
 
@@ -1845,7 +1862,7 @@ Rule::Applier::cons_t out_png_work(GenBuffer::Writable& out, Rule::OutputRule*or
    * IDAT  +  1     After IHDR and PLTE, multiple IDATs must be consecutive
    * IEND  1  1     Must be last
    */
-  
+
   /* 0..3:   PNG header */
   /* 8..11:  IHDR chunk length */
   /* 12..15: IHDR chunk name */
@@ -1865,7 +1882,7 @@ Rule::Applier::cons_t out_png_work(GenBuffer::Writable& out, Rule::OutputRule*or
     bool transp=cache->isTransparentM() && PTS_dynamic_cast(Image::Indexed*,img)->getTransp()>=0;
     /* unsigned ncols=PTS_dynamic_cast(Image::Indexed*,img)->getNcols(); */
     unsigned ncols3=img->getRowbeg()-img->getHeadp();
-    
+
     p=tmp;
     *p++=0; *p++=0; *p++=ncols3>>8; *p++=ncols3; /* 0: PLTE chunk length */
     *p++='P'; *p++='L'; *p++='T'; *p++='E'; /* 4: PLTE chunk name */
@@ -1873,7 +1890,7 @@ Rule::Applier::cons_t out_png_work(GenBuffer::Writable& out, Rule::OutputRule*or
     if (transp) {
       PTS_dynamic_cast(Image::Indexed*,img)->makeTranspZero();
       p=img->getHeadp(); p[0]=p[1]=p[2]=(char)0; /* force black backround (for consistency) */
-    } 
+    }
     out.vi_write(img->getHeadp(), ncols3);
     crc=crc32(crc32(CRC32_INITIAL,tmp+4,4), img->getHeadp(), ncols3);
     p=tmp; *p++=crc>>24;*p++=crc>>16;*p++=crc>>8;*p++=crc; /* 0: PLTE CRC */
@@ -1886,7 +1903,7 @@ Rule::Applier::cons_t out_png_work(GenBuffer::Writable& out, Rule::OutputRule*or
       //fprintf(stderr, "bKGD: 0x%08lx", (unsigned long)crc32(CRC32_INITIAL,"bKGD\2",5)); /* 0x88051d48 */
     }
   }
-  
+
   slen_t rlenht=img->getRlen()*img->getHt();
   #if 0 /* Calculates _bad_ CRC (before compression etc.) */
     p=tmp;
@@ -1903,7 +1920,7 @@ Rule::Applier::cons_t out_png_work(GenBuffer::Writable& out, Rule::OutputRule*or
     if (rlenht!=0) pp->vi_write(img->getRowbeg(), rlenht);
     pp->vi_write(0,0); /* flush all, write CRC */
   #endif
-  
+
   out.vi_write("\0\0\0\0IEND\256B`\202",12); /* IEND chunk */
   delete pp;
   delete cp;
@@ -1942,7 +1959,7 @@ static char *bmp_compress1_row(char *dst, char const *sbeg, char const *send) {
   slen_t frl, efrl;
   int ci;
   // bool oddp;
-  
+
   beg=sbeg;
   end=(send-sbeg>255) ? beg+255 : send;
 
@@ -1961,10 +1978,10 @@ static char *bmp_compress1_row(char *dst, char const *sbeg, char const *send) {
         end++;
         BMP_ASSERT(end-beg==255); /* buffer is full (255 chars) */
       }
-      
+
       best=r=beg;
       bestca=rca=-1; /* best and current advantage of c over r */
-      
+
       while (r!=rend) { /* c chunk should stop only at run-length boundaries */
         BMP_ASSERT(-255<=rca && rca<=255);
         BMP_ASSERT(-255<=bestca && bestca<=255);
@@ -2020,7 +2037,7 @@ static char *bmp_compress1_row(char *dst, char const *sbeg, char const *send) {
 
         beg=q; /* remove beginning of the r chunk from the buffer */
         if (ci>=0) { beg--; BMP_ASSERT((unsigned char)BUF(beg)==ci); }
-        
+
         while (efrl>=255) { PUTCH__('\377'); PUTCH__(c2); efrl-=255; } /* emit full r chunks */
         if (efrl>=2) { /* emit last r chunk */
           PUTCH__(efrl); PUTCH__(c2);
@@ -2042,7 +2059,7 @@ static char *bmp_compress1_row(char *dst, char const *sbeg, char const *send) {
 /** Windows Bitmap BMP output */
 Rule::Applier::cons_t out_bmp_check_rule(Rule::OutputRule* or_) {
   /* Supported BMP types: /Rgb8,
-   *   /Indexed1, /Indexed4, /Indexed8. 
+   *   /Indexed1, /Indexed4, /Indexed8.
    */
   Rule::Cache *cache=&or_->cache;
   if (cache->FileFormat!=cache->FF_BMP
@@ -2091,7 +2108,7 @@ Rule::Applier::cons_t out_bmp_work(GenBuffer::Writable& out, Rule::OutputRule*or
   slen_t ncols4=(palend-palbeg)/3*4;
   unsigned biCompr=or_->cache.Compression!=or_->cache.CO_RLE ? 0
    : or_->cache.SampleFormat==Image::SF_Indexed4 ? 2 : 1;
-  
+
   SimBuffer::B data;
   slen_t crowsize=2+ rlen+(rlen+128)*2/255; /* !! Imp: real upper bound? */
   char *crow=new char[crowsize];
@@ -2116,7 +2133,7 @@ Rule::Applier::cons_t out_bmp_work(GenBuffer::Writable& out, Rule::OutputRule*or
       *crow2++=10;
       *crow2++=6;
 #endif
-      
+
       assert((slen_t)(crow2-crow)<=crowsize-2);
       pend-=rlen;
       *crow2++='\0'; *crow2++='\0'; /* signal end of compressed data row */
@@ -2137,7 +2154,7 @@ Rule::Applier::cons_t out_bmp_work(GenBuffer::Writable& out, Rule::OutputRule*or
           *q++=px[1];
           *q++=px[3];
           px+=3;
-        }          
+        }
         data.vi_write(buf, rlen);
         if (pad!=0) data.vi_write("\0\0\0", pad);
       }
@@ -2175,7 +2192,7 @@ Rule::Applier::cons_t out_bmp_work(GenBuffer::Writable& out, Rule::OutputRule*or
     palbeg+=3;
   }
   assert((slen_t)(p-bmphead)==54+ncols4);
-  
+
   out.vi_write(bmphead, p-bmphead);  delete [] bmphead;
 #if 0
   out.vi_write("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",

@@ -4,7 +4,9 @@
  */
 
 #ifdef __GNUC__
+#ifndef __clang__
 #pragma implementation
+#endif
 #endif
 
 #if 0
@@ -19,7 +21,11 @@ extern "C" int _v_s_n_printf ( char *str, size_t n, const char *format, va_list 
 #ifndef __APPLE__ /* SUXX: Max OS X has #ifndef _POSIX_SOURCE around lstat() :-( */
 #define _POSIX_SOURCE 1 /* also popen() */
 #endif
+#ifdef USE_GNU_SOURCE_INSTEAD_OF_POSIX_SOURCE
+#define _GNU_SOURCE 1  /* Implies _POSIX_C_SOURCE >= 2. */
+#else
 #define _POSIX_C_SOURCE 2 /* also popen() */
+#endif
 #define _XOPEN_SOURCE_EXTENDED 1 /* Digital UNIX lstat */
 #ifndef _XPG4_2
 #define _XPG4_2 1 /* SunOS 5.7 lstat() */
@@ -164,24 +170,24 @@ GenBuffer::Writable& Files::FILEW::vformat(char const *fmt, va_list ap) {
 /* --- */
 
 /** Must be <=32767. Should be a power of two. */
-static const slen_t BUFLEN=4096;
+static const slen_t GENSIO_BUFLEN=4096;
 
 void Encoder::vi_putcc(char c) { vi_write(&c, 1); }
 int Decoder::vi_getcc() { char ret; return vi_read(&ret, 1)==1 ? (unsigned char)ret : -1; }
 void Encoder::writeFrom(GenBuffer::Writable& out, FILE *f) {
-  char *buf=new char[BUFLEN];
+  char *buf=new char[GENSIO_BUFLEN];
   int wr;
   while (1) {
-    if ((wr=fread(buf, 1, BUFLEN, f))<1) break;
+    if ((wr=fread(buf, 1, GENSIO_BUFLEN, f))<1) break;
     out.vi_write(buf, wr);
   }
   delete [] buf;
 }
 void Encoder::writeFrom(GenBuffer::Writable& out, GenBuffer::Readable& in) {
-  char *buf=new char[BUFLEN];
+  char *buf=new char[GENSIO_BUFLEN];
   int wr;
   while (1) {
-    if ((wr=in.vi_read(buf, BUFLEN))<1) break;
+    if ((wr=in.vi_read(buf, GENSIO_BUFLEN))<1) break;
     out.vi_write(buf, wr);
   }
   delete [] buf;
@@ -201,7 +207,7 @@ void Filter::FILEE::close() {
 }
 
 /* --- */
-       
+
 static FILE* fopenErr(char const* filename, char const* errhead) {
   FILE *f;
   if (NULLP==(f=fopen(filename,"rb")))
@@ -269,11 +275,20 @@ slen_t Filter::UngetFILED::vi_read(char *buf, slen_t len) {
   }
 }
 void Filter::UngetFILED::close() {
-  if (0!=(closeMode&CM_closep)) { fclose(f); f=(FILE*)NULLP; closeMode&=~CM_closep; }
-  unget.forgetAll(); ofs=0;
+  /* Since close() may be closed twice (e.g. once manually, and once from the
+   * the destructor), everything below must be idempotent.
+   */
+
+  if (0!=(closeMode&CM_closep)) {
+    fclose(f); f=(FILE*)NULLP;
+    closeMode&=~CM_closep;  /* Make it idempotent. */
+  }
+  unget.forgetAll();  /* Idempotent. */
+  ofs=0;  /* Idempotent. */
   if (filename!=NULLP) {
     if (0!=(closeMode&CM_unlinkp)) { remove(filename); }
     delete [] filename;
+    filename=(const char*)NULLP;  /* Make it idempotent. */
   }
 }
 
@@ -335,7 +350,12 @@ FILE* Filter::UngetFILED::getFILE(bool seekable_p) {
       if (0!=(closeMode&CM_unlinkp)) { remove(filename); }
       delete [] filename;
     }
+    /* This is the object data member char const* filename' in
+     * Filter::UngetFILED, owned by `this', deleted in the close() method
+     * called from the Filter::UngetFILED destructor.
+     */
     strcpy(const_cast<char*>(filename=new char[tmpnam.getLength()+1]), tmpnam());
+    /* Also makes a copy of the filename array, good */
     Files::tmpRemoveCleanup(filename);
     if (unget.getLength()-ofs==fwrite(unget()+ofs, 1, unget.getLength()-ofs, tf)) {
       static const slen_t BUFSIZE=4096; /* BUGFIX at Sat Apr 19 15:43:59 CEST 2003 */
@@ -483,12 +503,12 @@ Filter::PipeE::PipeE(GenBuffer::Writable &out_, char const*pipe_tmpl, slendiff_t
   if (tmpename) Files::tmpRemoveCleanup(tmpename()); /* already term0() */
   if (tmpsname) Files::tmpRemoveCleanup(tmpsname()); /* already term0() */
   /* </code similarity: Filter::PipeE::PipeE and Filter::PipeD::PipeD> */
-  
+
   // fprintf(stderr, "rc: (%s)\n", redir_cmd());
 
  #if HAVE_PTS_POPEN
   if (!tmpsname) {
-    if (NULLP==(p=popen(redir_cmd(), "w"CFG_PTS_POPEN_B))) Error::sev(Error::EERROR) << "Filter::PipeE" << ": popen() failed: " << (SimBuffer::B().appendDumpC(redir_cmd)) << (Error*)0;
+    if (NULLP==(p=popen(redir_cmd(), "w" CFG_PTS_POPEN_B))) Error::sev(Error::EERROR) << "Filter::PipeE" << ": popen() failed: " << (SimBuffer::B().appendDumpC(redir_cmd)) << (Error*)0;
     signal(SIGPIPE, SIG_IGN); /* Don't abort process with SIGPIPE signals if child cannot read our data */
   } else {
  #else
@@ -616,7 +636,7 @@ slen_t Filter::PipeD::vi_read(char *tobuf, slen_t tolen) {
   if (state==0) { /* Read the whole stream from `in', write it to `tmpsname' */
    #if HAVE_PTS_POPEN
     if (!tmpsname) {
-      if (NULLP==(p=popen(redir_cmd(), "w"CFG_PTS_POPEN_B))) Error::sev(Error::EERROR) << "Filter::PipeD" << ": popen() failed: " << (SimBuffer::B().appendDumpC(redir_cmd)) << (Error*)0;
+      if (NULLP==(p=popen(redir_cmd(), "w" CFG_PTS_POPEN_B))) Error::sev(Error::EERROR) << "Filter::PipeD" << ": popen() failed: " << (SimBuffer::B().appendDumpC(redir_cmd)) << (Error*)0;
       signal(SIGPIPE, SIG_IGN); /* Don't abort process with SIGPIPE signals if child cannot read our data */
       vi_precopy();
       in.vi_read(0,0);
@@ -653,9 +673,9 @@ void Filter::PipeD::do_close() {
   state=2;
 }
 void Filter::PipeD::vi_precopy() {
-  char *buf0=new char[BUFLEN], *buf;
+  char *buf0=new char[GENSIO_BUFLEN], *buf;
   slen_t len, wr;
-  while (0!=(len=in.vi_read(buf0, BUFLEN))) {
+  while (0!=(len=in.vi_read(buf0, GENSIO_BUFLEN))) {
     // printf("[%s]\n", buf0);
     for (buf=buf0; len!=0; buf+=wr, len-=wr) {
       wr=fwrite(buf, 1, len>0x4000?0x4000:len, p);
@@ -813,6 +833,7 @@ static int cleanup_remove(Error::Cleanup *cleanup) {
 }
 
 void Files::tmpRemoveCleanup(char const* filename) {
+  /* Copies the filename array. */
   Error::newCleanup(cleanup_remove, 0, filename);
 }
 
@@ -872,7 +893,7 @@ int Files::system3(char const *commands) {
     p=commands; while (*p!='\0' && *p!='\n') p++;
     if (*p=='\0') return system(commands); /* no newline -- simple run */
     SimBuffer::B tmpnam;
-    FILE *f=Files::open_tmpnam(tmpnam, /*binary_p:*/false, ".bat");
+    FILE *f=Files::open_tmpnam(tmpnam, "w", ".bat");
     tmpnam.term0();
     Files::tmpRemoveCleanup(tmpnam());
     fprintf(f, "@echo off\n%s\n", commands);

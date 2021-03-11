@@ -12,16 +12,12 @@
 
 #if _MSC_VER > 1000
 #  include "config-vc6.h"
+#elif USE_CONFIG_MINGW_H
+#  include "config-mingw.h"
+#elif USE_CONFIG_UCLIBC_H
+#  include "config-uclibc.h"
 #else
-#  if USE_CONFIG_MINGW_H
-#    include "config-mingw.h"
-#  else
-#    if USE_CONFIG_UCLIBC_H
-#      include "config-uclibc.h"
-#    else
-#      include "config.h"
-#    endif
-#  endif
+#  include "config.h"
 #endif
 
 #if 0
@@ -85,7 +81,7 @@
 /* at Tue Jan 18 16:18:34 CET 2005 */
 #define USE_ZLIB_MEM 1
 
-/** Quotes a filename to be displayed in error messages */ 
+/** Quotes a filename to be displayed in error messages */
 /* #define FNQ(str) (str) */
 #define FNQ(filename) SimBuffer::B().appendFnq(SimBuffer::Static(filename))
 #define FNQ2(beg,len) SimBuffer::B().appendFnq(SimBuffer::Static(beg,len),true)
@@ -148,7 +144,7 @@ typedef unsigned char bool;
 #ifdef const
 #  undef const
 #  define PTS_const
-#  undef HAVE_CONST 
+#  undef HAVE_CONST
 #else
 #  define PTS_const const
 #  define HAVE_CONST 1
@@ -346,6 +342,8 @@ typedef int bool;
 #  endif
 #endif
 
-
+#ifndef USE_ATTRIBUTE_ALIAS
+#define USE_ATTRIBUTE_ALIAS 1
+#endif
 
 #endif /* config2.h */

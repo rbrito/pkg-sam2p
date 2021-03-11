@@ -5,7 +5,9 @@
  */
 
 #ifdef __GNUC__
+#ifndef __clang__
 #pragma implementation
+#endif
 #endif
 
 #include "image.hpp"
@@ -16,7 +18,7 @@
 #include "gensio.hpp"
 #include "input-pnm.ci"
 #include <string.h>
-		    
+
 static Image::Sampled *in_pnm_reader(Image::Loader::UFD* ufd, SimBuffer::Flat const&) {
   Image::Sampled *ret=0;
   #if 0
@@ -43,10 +45,13 @@ static Image::Sampled *in_pnm_reader(Image::Loader::UFD* ufd, SimBuffer::Flat co
     // Error::sev(Error::NOTICE) << "PNM: loading alpha after PNM: "
     //   " ftell=" << ftell(f) <<
     //  " bytes=" << ((unsigned)bitmap.width*bitmap.height*bitmap.np)  << (Error*)0;
-    bitmap=pnm_load_image(ufdd); 
+    bitmap=pnm_load_image(ufdd);
     // fwrite(bitmap.bitmap,1,(unsigned)bitmap.width*bitmap.height*bitmap.np,stdout);
     /* Dat: black pixel is transparent */
     if (BITMAP_PLANES(bitmap)!=1) Error::sev(Error::EERROR) << "PNM: alpha must be PBM or PGM" << (Error*)0;
+    if (BITMAP_WIDTH(bitmap)!=ret->getWd() || BITMAP_HEIGHT(bitmap)!=ret->getHt()) {
+      Error::sev(Error::EERROR) << "PNM: inconsistent width or height in alpha" << (Error*)0;
+    }
     Image::Gray *img=new Image::Gray(BITMAP_WIDTH(bitmap), BITMAP_HEIGHT(bitmap), 8);
     memcpy(img->getRowbeg(), BITMAP_BITS(bitmap), (slen_t)BITMAP_WIDTH(bitmap)*BITMAP_HEIGHT(bitmap));
     delete [] BITMAP_BITS(bitmap);
@@ -58,6 +63,7 @@ static Image::Sampled *in_pnm_reader(Image::Loader::UFD* ufd, SimBuffer::Flat co
     } else {
       Error::sev(Error::NOTICE) << "PNM: loaded alpha, but no transparent pixels" << (Error*)0;
     }
+    delete img;
   }
   /* fclose(f); */
   return ret;

@@ -9,7 +9,9 @@
 #define AT_BITMAP_H
 
 #ifdef __GNUC__
+#ifndef __clang__
 #pragma interface
+#endif
 #endif
 
 #define PTS_SAM2P 1
@@ -21,8 +23,7 @@
 #define WARNINGP3(m,a,n,b,o,c,p) Error::sev(Error::WARNING) << m << n << b << o << c << p << (Error*)0;
 
 #define XMALLOCT(var,typep,size) var=(typep)new char[size]
-#define XMALLOCTU(var,type) var=(type*)new type
-#define XFREE(p) delete p
+#define XFREE(p) delete [] (char*)(p)
 /* ^^^ Imp: arrays?? */
 
 typedef unsigned at_dimen_t; /**** pts ****/

@@ -161,7 +161,7 @@ static const unsigned
   OPT_Compression=0x22,
   OPT_TransferEncoding=0x32,
   OPT_TransferEncodingF=0x42,
-  OPT_Asis=0x50,
+  // OPT_Asis=0x50,
   OPT_PSL1=0x60,
   OPT_PSLC=0x70,
   OPT_PSL2=0x80,
@@ -170,7 +170,7 @@ static const unsigned
   OPT_PDF=0xB1,
   OPT_DisplayJobFile=0xC1,
   OPT_Hints=0xD2,
-  OPT_InputFile=0xE2,
+  // OPT_InputFile=0xE2,
   OPT_OutputFile=0xF2,
   OPT_Scale=0x101,
   OPT_Margins=0x112,
@@ -985,7 +985,7 @@ int run_sam2p_engine(Files::FILEW &sout, Files::FILEW &serr, char const*const*ar
     MiniPS::Parser p(&flatd);
     p.addSpecRun("%bts", &bts);
     Rule::Templates=(MiniPS::Dict*)p.parse1();
-    MiniPS::RDICT(job)->put("/Templates", (MiniPS::VALUE)Rule::Templates); /* avoid memory leak (job gets freed recursively) */
+    MiniPS::RDICT(job)->put("/Templates", (MiniPS::VALUE)Rule::Templates);  /* Takes ownership, deletes the previous value. */
   }
 
   /* --- Preprocess Appliers */
@@ -995,15 +995,18 @@ int run_sam2p_engine(Files::FILEW &sout, Files::FILEW &serr, char const*const*ar
   /* --- Read/open other files */
 
   if ((MiniPS::VALUE)LoadHints==MiniPS::Qnull) { /* smart default */
+    /* This isn't reached by default (sam2p t.png t.pdf), becuase `job'
+     * already contains /LoadHints ().
+     */
+
     if (!rule_list[0].isEOL() && rule_list[0].cache.Compression==Rule::Cache::CO_JAI) {
       LoadHints=new MiniPS::String("jpeg-asis",4); /* used by in_jai.cpp and in_jpeg.cpp; even TIFF/JPEG */
     } else {
       LoadHints=new MiniPS::String("",0);
     }
-    MiniPS::RDICT(job)->put("/LoadHints", (MiniPS::VALUE)LoadHints); /* avoid memory leak (job gets freed recursively) */
+    MiniPS::RDICT(job)->put("/LoadHints", (MiniPS::VALUE)LoadHints);  /* Takes ownership, deletes the previous value. */
   }
       
-  /* Imp: eliminate memory leak from default LoadHints */
   /* vvv may raise tons of error messages */
   // InputFile->term0(); /* always term0() for MiniPS::String */
   if (ufd==NULLP) ufd=new Filter::UngetFILED(InputFile->begin_(), stdin,
@@ -1074,7 +1077,7 @@ int run_sam2p_engine(Files::FILEW &sout, Files::FILEW &serr, char const*const*ar
   if (successp && exitCode == 0)
     fputs("Success.\n", stderr);
   /* Don't do Error::cexit(exitCode);, it won't run destructors of
-   * stack-allocated objects, and valgrind will complain about memory leaks.
+   * stack-allocated objects, and valgrind will complain about leaking memory.
    */
   return exitCode;
 }
