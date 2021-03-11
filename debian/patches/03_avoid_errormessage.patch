@@ -2,9 +2,9 @@ Description: We don't have tif22pnm in debian, so we just quell the error messag
 Author: Stefan Fritsch <sf@sfritsch.de>
 Last-Update: 2011-11-01
 
---- sam2p-0.44-13.orig/in_tiff.cpp
-+++ sam2p-0.44-13/in_tiff.cpp
-@@ -32,14 +32,7 @@
+--- a/in_tiff.cpp
++++ b/in_tiff.cpp
+@@ -34,14 +34,7 @@
  #endif
    #else
      #if OS_COTY==COTY_UNIX
@@ -20,9 +20,9 @@ Last-Update: 2011-11-01
      #else
        "tif22pnm -rgba %S pnm:"; /* Wants to seek in the file. */
      #endif
---- sam2p-0.44-13.orig/in_png.cpp
-+++ sam2p-0.44-13/in_png.cpp
-@@ -35,14 +35,7 @@
+--- a/in_png.cpp
++++ b/in_png.cpp
+@@ -37,14 +37,7 @@
      "png22pnm -rgba %S >%D";
    #else
      #if OS_COTY==COTY_UNIX

@@ -2,11 +2,9 @@ Description: fix DEB_BUILD_OPTIONS=nostrip
 Author: Stefan Fritsch <sf@debian.org>
 Last-Update: 2011-11-01
 
-Index: sam2p/Makefile
-===================================================================
---- sam2p.orig/Makefile	2011-11-01 18:42:54.000000000 +0100
-+++ sam2p/Makefile	2011-11-01 18:52:13.878830302 +0100
-@@ -17,7 +17,7 @@
+--- a/Makefile
++++ b/Makefile
+@@ -33,7 +33,7 @@
  export PERL_BADLANG
  
  CXXX=$(CXD_assert)
@@ -15,7 +13,7 @@ Index: sam2p/Makefile
  ifeq ($(ENABLE_DEBUG), no)
  CXXX=$(CXD_no)
  endif
-@@ -51,8 +51,8 @@
+@@ -101,8 +101,8 @@
  IDE_TARGETS_debug := $(patsubst %,%.yes, $(TARGETS))
  IDE_TARGETS_release := $(TARGETS)
  
