@@ -4,7 +4,9 @@
  */
 
 #ifdef __GNUC__
+#ifndef __clang__
 #pragma implementation
+#endif
 #endif
 
 #include "image.hpp"
@@ -105,11 +107,45 @@ char const *Image::Sampled::cs2devcs(unsigned char cs) {
   return cs>=1 && cs<=5 ? names[cs] : (char*)NULLP;
 }
 
+static void fatal_image_too_large() {
+  Error::sev(Error::EERROR) << "Image: Image too large." << (Error*)0;
+}
+
+static slen_t multiply_check(slen_t a, slen_t b) {
+  const slen_t result = a * b;
+  /* Check for overflow. Works only if everything is unsigned. */
+  if (result / a != b) fatal_image_too_large();
+  return result;
+}
+
+static slen_t multiply_check(slen_t a, slen_t b, slen_t c) {
+  return multiply_check(multiply_check(a, b), c);
+}
+
+static slen_t add_check(slen_t a, slen_t b) {
+  /* Check for overflow. Works only if everything is unsigned. */
+  if (b > (slen_t)-1 - a) fatal_image_too_large();
+  return a + b;
+}
+
+#if 0
+static slen_t add_check(slen_t a, slen_t b, slen_t c) {
+  return add_check(add_check(a, b), c);
+}
+#endif
+
+static slen_t add_check(slen_t a, slen_t b, slen_t c, slen_t d) {
+  return add_check(add_check(a, b), add_check(c, d));
+}
 
 void Image::Sampled::init(slen_t l_comment, slen_t l_header, dimen_t wd_, dimen_t ht_,
   /* ^^^ 24 is required for /Transparent in out_tiff_work */
   unsigned char bpc_, unsigned char ty_, unsigned char cpp_) {
-  static const slen_t PADDING=24;
+  /* Even if we continue from here, most probably we'll reach
+   * ``sam2p.yes: Error: applyProfile: invalid combination, no applicable OutputRule''.
+   * So more work is needed to support output images of size 0.
+   */
+  if (wd_ <= 0 || ht_ <= 0) Error::sev(Error::EERROR) << "Image: Image of size 0." << (Error*)0;
   bpc=bpc_;
   ty=ty_;
   wd=wd_;
@@ -117,10 +153,13 @@ void Image::Sampled::init(slen_t l_comment, slen_t l_header, dimen_t wd_, dimen_
   cpp=cpp_;
   // pred=1;
   transpc=0x1000000UL; /* Dat: this means: no transparent color */
-  rlen=(((rlen_t)bpc_)*cpp_*wd_+7)>>3;
-  beg=new char[len=l_comment+l_header+rlen*ht_+PADDING];
+  const slen_t rlens = add_check(multiply_check(bpc_, cpp_, wd_), 7) >> 3;
+  rlen = rlens;
+  if (rlen != rlens) fatal_image_too_large();
+  beg=new char[len=add_check(l_comment, l_header, multiply_check(rlen, ht_), bpc)];
   rowbeg=(headp=const_cast<char*>(beg)+l_comment)+l_header;
   trail=const_cast<char*>(beg)+len-bpc;
+  memset(trail, 0, bpc);
 }
 
 Image::Gray*    Image::Sampled::toGray0(unsigned char bpc_) {
@@ -167,6 +206,7 @@ Image::Gray*    Image::Sampled::toGray0(unsigned char bpc_) {
       }
     }
   } else assert(0);
+  delete [] crow;
   return img;
 }
 Image::RGB*     Image::Sampled::toRGB0(unsigned char bpc_) {
@@ -210,6 +250,7 @@ Image::RGB*     Image::Sampled::toRGB0(unsigned char bpc_) {
       outp+=wd*3;
     }
   } else assert(0);
+  delete [] crow;
   return img;
 }
 
@@ -265,7 +306,7 @@ void Image::Sampled::to8mul() {
   rowbeg=const_cast<char*>(beg)+(rowbeg-oldBeg);
   trail= const_cast<char*>(beg)+len-bpc;
   memcpy(const_cast<char*>(beg), oldBeg, rowbeg-beg);
-  
+
   unsigned char *to=(unsigned char*)rowbeg, *toend;
   unsigned int i, j;
   Image::Sampled::dimen_t htc;
@@ -314,7 +355,7 @@ void Image::Sampled::to8mul() {
       if (0!=((wdcpp)&1)) *to++=(*p++>>4)*17;
     }
   } else assert(0 && "invalid bpc");
-  
+
   delete [] const_cast<char*>(oldBeg);
 }
 
@@ -334,7 +375,7 @@ void Image::Sampled::to8nomul() {
   rowbeg=const_cast<char*>(beg)+(rowbeg-oldBeg);
   trail= const_cast<char*>(beg)+len-bpc;
   memcpy(const_cast<char*>(beg), oldBeg, rowbeg-beg);
-  
+
   unsigned char *to=(unsigned char*)rowbeg, *toend;
   unsigned int i, j;
   Image::Sampled::dimen_t htc;
@@ -386,7 +427,7 @@ void Image::Sampled::to8nomul() {
       if (0!=((wdcpp)&1)) *to++=(*p++>>4);
     }
   } else assert(0 && "invalid bpc");
-  
+
   delete [] const_cast<char*>(oldBeg);
 }
 
@@ -447,19 +488,20 @@ bool Image::Gray::hasPixelRGB(Image::Sampled::rgb_t rgb) const {
   return false;
 }
 
-Image::Indexed* Image::Sampled::addAlpha0(Image::Sampled *img, Image::Gray *al) {
-  Image::Indexed *iimg=(Image::Indexed*)img;
-  unsigned ncols=0;
-  if (img==NULLP) Error::sev(Error::EERROR) << "addAlpha: too many colors, transparency impossible" << (Error*)0;
+Image::Indexed* Image::Sampled::addAlpha0(Image::Indexed *iimg, Image::Gray *al) {
+  if (iimg==NULLP) Error::sev(Error::EERROR) << "addAlpha: too many colors, transparency impossible" << (Error*)0;
   iimg->to8();
-  iimg->packPal();
-  if ((ncols=iimg->getNcols())==256) Error::sev(Error::EERROR) << "addAlpha: too many colors, transparency impossible" << (Error*)0;
+  unsigned ncols;
+  if ((ncols=iimg->getNcols()) == 256) {
+    iimg->packPal();  // TODO: Do a more lightweight palette packing if there are only 2 colors (such as PNG import through PNM).
+    if ((ncols=iimg->getNcols())==256) Error::sev(Error::EERROR) << "addAlpha: too many colors, transparency impossible" << (Error*)0;
+  }
   iimg->setNcolsMove(ncols+1);
   /* fprintf(stderr,"old ncols=%u\n", ncols); */
   iimg->setPal(ncols,0); /* black */
   iimg->setTransp(ncols);
   assert(iimg->getRlen()==iimg->getWd());
-  assert(iimg->getWd()==al->getWd());  
+  assert(iimg->getWd()==al->getWd());
   char *p=iimg->getRowbeg(), *pend=p+iimg->getRlen()*iimg->getHt(), *alq=al->getRowbeg();
   while (p!=pend) {
     if ((unsigned char)*alq++!=255) *p=ncols; /* make it transparent */
@@ -485,7 +527,7 @@ void Image::Indexed::setNcolsMove(unsigned short ncols_) {
   unsigned ncols=getNcols();
   if (ncols_==ncols) return;
   if (ncols_<ncols || (slen_t)(headp-beg)>=(ncols_-ncols)*3) {
-    memmove(rowbeg-ncols_*3, headp, ncols_*3);
+    memmove(rowbeg-ncols_*3, headp, (ncols_<ncols ? ncols_ : ncols)*3);
     /* ^^^ *3 BUGFIX at Sun Apr 14 00:50:34 CEST 2002 */
   } else { /* Imp: test this routine */
     /* Tue Jun 11 16:22:52 CEST 2002 */
@@ -519,23 +561,56 @@ void Image::Indexed::setTransp(unsigned char color) {
   unsigned char *p=(unsigned char*)headp+3*color;
   transpc=((Image::Sampled::rgb_t)p[0]<<16)+(p[1]<<8)+p[2];
 }
+
 bool Image::Indexed::setTranspc(rgb_t color) {
+  if (color!=0x1000000UL && color!=transpc) {
+    char t[3];
+    t[0]=color>>16; t[1]=color>>8; t[2]=color;
+    char *p=headp, *pend=rowbeg;
+    while (p!=pend) { /* Examine the palette. */
+      if (p[0]==t[0] && p[1]==t[1] && p[2]==t[2]) {
+        transpc=color;
+        transp=(p-headp)/3; /* destroy old transparency */
+      }
+      p+=3;
+    }
+  }
+  return transp!=-1;
+}
+
+bool Image::Indexed::wouldSetTranspc(rgb_t color) const {
+  if (transp!=-1) return true;
+  if (color!=0x1000000UL && color!=transpc) {
+    char t[3];
+    t[0]=color>>16; t[1]=color>>8; t[2]=color;
+    char *p=headp, *pend=rowbeg;
+    while (p!=pend) { /* Examine the palette. */
+      if (p[0]==t[0] && p[1]==t[1] && p[2]==t[2]) return true;
+      p+=3;
+    }
+  }
+  return false;
+}
+
+void Image::Indexed::setTranspcAndRepack(rgb_t color) {
+  if (!(color!=0x1000000UL && color!=transpc)) return;
   char t[3];
-  /** vvv BUGFIX at Sat Jun 15 13:40:30 CEST 2002 */
-  if (color==0x1000000UL) return transp!=-1; /* no effect */
-  if (color==transpc) return transp!=-1; /* would not change */
   t[0]=color>>16; t[1]=color>>8; t[2]=color;
   char *p=headp, *pend=rowbeg;
+  bool need_repack = false;
   while (p!=pend) { /* Examine the palette. */
     if (p[0]==t[0] && p[1]==t[1] && p[2]==t[2]) {
       transpc=color;
       transp=(p-headp)/3; /* destroy old transparency */
-      return true;
+      need_repack = true;
     }
     p+=3;
   }
-  /* No transparency set this time. Maybe there is an old one; unchanged. */
-  return transp!=-1;
+  if (need_repack) {
+    const unsigned char old_bpc = bpc;
+    packPal();  /* May change bpc. */
+    setBpc(old_bpc);
+  }
 }
 
 void Image::Indexed::to8() { to8nomul(); }
@@ -579,7 +654,7 @@ void Image::Indexed::copyRGBRow(char *to, Image::Sampled::dimen_t whichrow) cons
   unsigned char *p=(unsigned char*)rowbeg+rlen*whichrow;
   char *r, *toend=to+3*wd;
   unsigned int i, j;
-  
+
   if (bpc==1) {
     toend-=3*(wd&7);
     while (to!=toend) {
@@ -633,7 +708,7 @@ void Image::Indexed::packPal() {
   assert(transp>=-1);
   assert(transp<(int)oldNcols);
   if (oldNcols<=1) return; /* Cannot optimize further. */
-  
+
   /* Find unused colors. old2new[c]=(is c used at least once)?1:0 */
   unsigned char old2new[256], newpal[768];
   memset(old2new, 0, sizeof(old2new));
@@ -693,7 +768,7 @@ void Image::Indexed::packPal() {
     p=newpal+newTransp*3;
   }
 
-  /* Update the image. */  
+  /* Update the image. */
   for (p=(unsigned char*)rowbeg, pend=p+wd*ht; p!=pend; p++) {
     assert(*p<oldNcols);
     *p=old2new[*p];
@@ -715,6 +790,7 @@ void Image::Indexed::sortPal() {
   unsigned ncols = getNcols(), i;
   assert(transp == -1 || transp + 0U == ncols - 1);
   assert(ncols <= 256);
+  if (ncols == 0) return;  /* Safe if ncols == 0 and transp == -1. */
   if (transp + 0U == ncols - 1) --ncols;
   if (ncols <= 1) return;
   #if SIZEOF_SHORT>=4
@@ -733,7 +809,7 @@ void Image::Indexed::sortPal() {
   for (i = 1; i < ncols; ++i) {
     if (d[i] < d[i - 1]) break;
   }
-  if (i >= ncols) return;  /* Palette already sorted. */ 
+  if (i >= ncols) return;  /* Palette already sorted. */
 
   /* Heap sort (unstable). Based on Knuth's TAOCP 5.2.3.H .
    * Although heap sort is unstable, sortPal implements a stable sort, because
@@ -898,7 +974,7 @@ void Image::Indexed::setBpc(unsigned char bpc_) {
   to8(); /* Imp: make the transition without the intermediate 8-bits... */
   if (bpc_==8) return;
   if (ht==0 || wd==0) { bpc=bpc_; return; }
-  
+
   const char *oldBeg=beg;
   unsigned char *p=(unsigned char*)rowbeg;
   assert(cpp==1);
@@ -910,11 +986,12 @@ void Image::Indexed::setBpc(unsigned char bpc_) {
   rowbeg=const_cast<char*>(beg)+(rowbeg-oldBeg);
   trail= const_cast<char*>(beg)+len-bpc;
   memcpy(const_cast<char*>(beg), oldBeg, rowbeg-beg);
-  
+
   unsigned char *to=(unsigned char*)rowbeg, *toend;
   unsigned int i;
   Image::Sampled::dimen_t htc;
   if (bpc_==1) {
+    // This reads bytes from trail.
     htc=ht; while (htc--!=0) {
       toend=to+((wdcpp+7)>>3);
       while (to!=toend) {
@@ -925,6 +1002,7 @@ void Image::Indexed::setBpc(unsigned char bpc_) {
       if (0!=(wdcpp&7)) p+=(wdcpp&7)-8; /* negative */
     }
   } else if (bpc_==2) {
+    // This reads bytes from trail.
     htc=ht; while (htc--!=0) {
       toend=to+((wdcpp+3)>>2);
       while (to!=toend) {
@@ -934,6 +1012,7 @@ void Image::Indexed::setBpc(unsigned char bpc_) {
       if (0!=(wdcpp&3)) p+=(wdcpp&3)-4;
     }
   } else if (bpc_==4) {
+    // This reads bytes from trail.
     htc=ht; while (htc--!=0) {
       toend=to+((wdcpp+1)>>1);
       while (to!=toend) {
@@ -1004,10 +1083,10 @@ Image::Sampled* Image::Indexed::addAlpha(Image::Gray *al) {
       if ((unsigned char)*alq++!=255) p[0]=ncols; /* may set to 0 if ncols==256 */
       p++;
     }
-    if (ncols==256) { /* Try again, probably now we have less colors */
+    if (ncols==256) { /* Try again, probably now we have fewer colors */
       packPal();
       if ((ncols=getNcols())==256) Error::sev(Error::EERROR) << "Indexed::addAlpha: too many colors, transparency impossible" << (Error*)0;
-      for (p=rowbeg,alq=al->getRowbeg(); p!=pend; p++) 
+      for (p=rowbeg,alq=al->getRowbeg(); p!=pend; p++)
         if ((unsigned char)*alq++!=255) *p=ncols;
     }
     setNcolsMove(ncols+1);
@@ -1062,7 +1141,7 @@ Image::Indexed* Image::Gray::toIndexed()/* const*/ {
   } else if (bpc==8) {
     for (i=0,rgb=0;i<256;i++,rgb+=(rgb_t)0x010101L) img->setPal(i,rgb);
   }
-  memcpy(img->getRowbeg(), rowbeg, beg+len-rowbeg);
+  memcpy(img->getRowbeg(), rowbeg, rlen*ht);
   return img;
 }
 bool Image::Gray::canGray() const { return true; }
@@ -1261,9 +1340,9 @@ GenBuffer::Writable& operator<<(GenBuffer::Writable& gw, Image::Sampled const& i
   Image::Sampled::dimen_t y, ht=img.getHt();
   /* vvv in the xv program: image file must be >=30 bytes long to be treated as image */
   gw << "P6\n###############\n" << img.getWd() << ' ' << ht;
-  if (img.getTranspc()>=0x1000000UL) gw << "\n#Opaque"; 
+  if (img.getTranspc()>=0x1000000UL) gw << "\n#Opaque";
                                 else gw << "\n#T" << img.rgb2webhash(img.getTranspc());
-  gw << "\n255\n";  
+  gw << "\n255\n";
   for (y=0; y<ht; y++) {
     img.copyRGBRow(buf, y);
     gw.vi_write(buf, buflen);
@@ -1272,12 +1351,12 @@ GenBuffer::Writable& operator<<(GenBuffer::Writable& gw, Image::Sampled const& i
   return gw;
 }
 
-static Image::Loader *first=(Image::Loader*)NULLP;
+static Image::Loader *first_image_loader=(Image::Loader*)NULLP;
 
 void Image::register0(Image::Loader *anew) {
   param_assert(anew!=NULLP);
-  anew->next=first;
-  first=anew;
+  anew->next=first_image_loader;
+  first_image_loader=anew;
 }
 
 #if 0 /* removed by code refactoring */
@@ -1308,7 +1387,7 @@ Rule::Sampled *Rule::load(char const* filename) {
    || ferror(f))
     Error::sev(Error::EERROR) << "I/O error in image file: " << FNQ(filename) << (Error*)0;
   if (got!=0 && got!=Applier::MAGIC_LEN) memmove(buf+2*Applier::MAGIC_LEN-got, buf+Applier::MAGIC_LEN, got);
-  Applier *p=first;
+  Applier *p=first_image_loader;
   Applier::reader_t reader;
   while (p!=NULLP) {
     if (NULLP!=(reader=p->checker(buf,buf+Applier::MAGIC_LEN))) { return reader(f); }
@@ -1333,7 +1412,7 @@ Image::Sampled *Image::load(Image::Loader::UFD* ufd0, SimBuffer::Flat const& loa
   if (ret<Loader::MAGIC_LEN) memset(buf+ret, '\0', Loader::MAGIC_LEN-ret);
   buf[Loader::MAGIC_LEN]='\0';
   /* Dat: do not read the trailer onto buf+Loader::MAGIC_LEN, because no ->checker() uses it yet. */
-  Loader *p=first;
+  Loader *p=first_image_loader;
   Loader::reader_t reader;
   ufd.unread(buf, ret); /* tries to seek back, on failure calls ufd.getUnget().vi_write() */
   // ^^^ rewind(f); /* checker might have read */
@@ -1388,7 +1467,7 @@ Image::Sampled *Image::load(char const* filename, SimBuffer::Flat const& loadHin
    || ferror(f))
     Error::sev(Error::EERROR) << "I/O error pre in image file: " << FNQ(filename) << (Error*)0;
   if (got!=0 && got!=Loader::MAGIC_LEN) memmove(buf+2*Loader::MAGIC_LEN-got, buf+Loader::MAGIC_LEN, got);
-  Loader *p=first;
+  Loader *p=first_image_loader;
   Loader::reader_t reader;
   while (p!=NULLP) {
     if ((format==(char const*)NULLP || 0==strcmp(p->format, format))
@@ -1412,7 +1491,7 @@ Image::Sampled *Image::load(char const* filename, SimBuffer::Flat const& loadHin
 
 unsigned Image::printLoaders(GenBuffer::Writable &out) {
   unsigned num=0;
-  Loader *p=first;
+  Loader *p=first_image_loader;
   while (p!=NULLP) {
     if (p->checker!=(Loader::checker_t)0 && p->format!=(char const*)NULLP) { num++; out << ' ' << p->format; }
     p=p->next;
@@ -1482,15 +1561,19 @@ bool Image::SampledInfo::setSampleFormat(sf_t sf_, bool WarningOK, bool TryOnly,
    case SF_Bbox:
     sf=SF_Bbox; return true;
    case SF_Opaque:
-    if (!hasTransp && nncols==1 && PTS_dynamic_cast(Indexed*,img)->setTranspc(Transparent)) { hasTransp=true; nncols=0; }
+    if (!hasTransp && nncols==1 && PTS_dynamic_cast(Indexed*,img)->wouldSetTranspc(Transparent)) return false;
     if (hasTransp || nncols!=1) return false;
     assert(img->getTy()==img->TY_INDEXED);
     /* The color can be calculated: PTS_dynamic_cast(Indexed*>(img)->getPal(0); */
     /* Conversion is not necessary. */
     sf=SF_Opaque; return true;
    case SF_Transparent:
-    if (!hasTransp && nncols==1 && PTS_dynamic_cast(Indexed*,img)->setTranspc(Transparent)) { hasTransp=true; nncols=0; }
-    if (!hasTransp || nncols!=0) return false;
+    if (!hasTransp && nncols==1 && PTS_dynamic_cast(Indexed*,img)->setTranspc(Transparent)) {
+      /* Must return true eventually, because setTranspc has modified the image. */
+      hasTransp=true; nncols=0;
+    } else if (!hasTransp || nncols!=0) {
+      return false;
+    }
     assert(img->getTy()==img->TY_INDEXED);
     /* Conversion is not necessary. */
     sf=SF_Transparent; return true;
@@ -1530,11 +1613,12 @@ bool Image::SampledInfo::setSampleFormat(sf_t sf_, bool WarningOK, bool TryOnly,
     // assert(img!=NULLP); if (bak!=img) delete bak;
     { iimg=PTS_dynamic_cast(Indexed*,img);
       iimg->setBpc(1);
-      if (iimg->setTranspc(Transparent)) return false; /* Dat: false if must be changed to become transparent; Imp: undo changes */
+      if (iimg->wouldSetTranspc(Transparent)) return false; /* Dat: false if must be changed to become transparent. */
+      iimg->setTranspcAndRepack(Transparent);
     }
     sf=SF_Indexed1; return true;
    case SF_Mask:
-    if (!hasTransp && nncols==2 && PTS_dynamic_cast(Indexed*,img)->setTranspc(Transparent)) { hasTransp=true; nncols=1; }
+    if (!hasTransp && nncols==2 && PTS_dynamic_cast(Indexed*,img)->wouldSetTranspc(Transparent)) { hasTransp=true; --nncols; }
     if (nncols>1 || zero) return false;
     if (TryOnly) return WarningOK || nncols+(hasTransp?1:0)==2;
     if (nncols==1 && !hasTransp) {
@@ -1548,8 +1632,8 @@ bool Image::SampledInfo::setSampleFormat(sf_t sf_, bool WarningOK, bool TryOnly,
     assert(img->getTy()==img->TY_INDEXED);
     { iimg=PTS_dynamic_cast(Indexed*,img);
       iimg->setBpc(1);
-      if (!iimg->setTranspc(Transparent)) return false;
-      iimg->packPal();
+      if (!iimg->wouldSetTranspc(Transparent)) return false;
+      iimg->setTranspcAndRepack(Transparent);
     }
     /* printf("gett=%d\n", PTS_dynamic_cast(Indexed*,img)->getTransp()); */
     /* vvv BUGFIX: <1U -> <2U */
@@ -1559,10 +1643,7 @@ bool Image::SampledInfo::setSampleFormat(sf_t sf_, bool WarningOK, bool TryOnly,
      */
     sf=SF_Mask; return true;
    case SF_Transparent2:
-    if (nncols==4) {
-      (iimg=PTS_dynamic_cast(Indexed*,img))->setTranspc(Transparent); /* Imp: are we Indexed*?? */
-      hasTransp=iimg->hasTransp();
-    }
+    if (!hasTransp && nncols==4 && PTS_dynamic_cast(Indexed*,img)->wouldSetTranspc(Transparent)) { hasTransp=true; --nncols; }
     if (nncols>3 || zero) return false;
     if (TryOnly) return WarningOK || (hasTransp && nncols>=2);
     Error::sev(Error::NOTICE) << "SampleFormat: Transparent2 separates colors" << (Error*)0;
@@ -1577,7 +1658,7 @@ bool Image::SampledInfo::setSampleFormat(sf_t sf_, bool WarningOK, bool TryOnly,
     assert(img->getTy()==img->TY_INDEXED);
     { iimg=PTS_dynamic_cast(Indexed*,img);
       iimg->setBpc(2); /* BUGFIX at Sat Jun 15 13:55:25 CEST 2002 */
-      iimg->setTranspc(Transparent);
+      iimg->setTranspcAndRepack(Transparent);
       // imgs=iimg->separate(); /* postponed because of GIF89a output */
     }
     sf=SF_Transparent2; return true;
@@ -1611,11 +1692,12 @@ bool Image::SampledInfo::setSampleFormat(sf_t sf_, bool WarningOK, bool TryOnly,
     assert(img->getTy()==img->TY_INDEXED);
     { iimg=PTS_dynamic_cast(Indexed*,img);
       iimg->setBpc(2);
-      if (iimg->setTranspc(Transparent)) return false;
+      if (iimg->wouldSetTranspc(Transparent)) return false;
+      iimg->setTranspcAndRepack(Transparent);
     }
     sf=SF_Indexed2; return true;
    case SF_Transparent4:
-    if (nncols==16) PTS_dynamic_cast(Indexed*,img)->setTranspc(Transparent);
+    if (!hasTransp && nncols==16 && PTS_dynamic_cast(Indexed*,img)->wouldSetTranspc(Transparent)) { hasTransp=true; --nncols; }
     if (nncols>15 || zero) return false;
     if (TryOnly) return WarningOK || (hasTransp && nncols>=4);
     Error::sev(Error::NOTICE) << "SampleFormat: Transparent4 separates colors" << (Error*)0;
@@ -1630,7 +1712,7 @@ bool Image::SampledInfo::setSampleFormat(sf_t sf_, bool WarningOK, bool TryOnly,
     assert(img->getTy()==img->TY_INDEXED);
     { iimg=PTS_dynamic_cast(Indexed*,img);
       iimg->setBpc(4);
-      iimg->setTranspc(Transparent);
+      iimg->setTranspcAndRepack(Transparent);
       // imgs=iimg->separate(); /* postponed because of GIF89a output */
     }
     sf=SF_Transparent4; return true;
@@ -1690,11 +1772,12 @@ bool Image::SampledInfo::setSampleFormat(sf_t sf_, bool WarningOK, bool TryOnly,
     assert(img->getTy()==img->TY_INDEXED);
     { iimg=PTS_dynamic_cast(Indexed*,img);
       iimg->setBpc(4);
-      if (iimg->setTranspc(Transparent)) return false;
+      if (iimg->wouldSetTranspc(Transparent)) return false;
+      iimg->setTranspcAndRepack(Transparent);
     }
     sf=SF_Indexed4; return true;
    case SF_Transparent8:
-    if (nncols==256) PTS_dynamic_cast(Indexed*,img)->setTranspc(Transparent);
+    if (!hasTransp && nncols==256 && PTS_dynamic_cast(Indexed*,img)->wouldSetTranspc(Transparent)) { hasTransp=true; --nncols; }
     if (nncols>255 || zero) return false;
     if (!WarningOK) return false;
     if (TryOnly) return true;
@@ -1708,7 +1791,7 @@ bool Image::SampledInfo::setSampleFormat(sf_t sf_, bool WarningOK, bool TryOnly,
     assert(img->getTy()==img->TY_INDEXED);
     { iimg=PTS_dynamic_cast(Indexed*,img);
       iimg->setBpc(8); /* should be a no-op */
-      iimg->setTranspc(Transparent);
+      iimg->setTranspcAndRepack(Transparent);
       // imgs=iimg->separate(); /* postponed because of GIF89a output */
     }
     sf=SF_Transparent8; return true;
@@ -1770,7 +1853,8 @@ bool Image::SampledInfo::setSampleFormat(sf_t sf_, bool WarningOK, bool TryOnly,
     assert(img->getTy()==img->TY_INDEXED);
     { iimg=PTS_dynamic_cast(Indexed*,img);
       iimg->setBpc(8); /* should be a no-op */
-      if (iimg->setTranspc(Transparent)) return false;
+      if (iimg->wouldSetTranspc(Transparent)) return false;
+      iimg->setTranspcAndRepack(Transparent);
     }
     sf=SF_Indexed8; return true;
    case SF_Rgb4:
@@ -1831,7 +1915,7 @@ bool Image::SampledInfo::setSampleFormat(sf_t sf_, bool WarningOK, bool TryOnly,
     }
     sf=SF_Asis; return true;
   }
-  assert(0 && "unknown SampleFormat requested");  
+  assert(0 && "unknown SampleFormat requested");
   return false; /* NOTREACHED */
 }
 

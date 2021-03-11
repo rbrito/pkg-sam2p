@@ -3,7 +3,9 @@
  */
 
 #ifdef __GNUC__
+#ifndef __clang__
 #pragma interface
+#endif
 #endif
 
 #ifndef MINIPS_HPP
@@ -93,9 +95,12 @@ class MiniPS {
     inline char* begin_() const { return (char*)ptr; }
     inline char const* operator()() const { return (char const*)ptr; }
    protected:
-    ii_t len; void *ptr; unsigned char ty; bool dumping;
+    ii_t len;
+    void *ptr;  /* Will be freed by MiniPS::delete0() except for Void. */
+    unsigned char ty;
+    bool dumping;
   };
-  /** ptr contains a `void*'. Won't be freed. */
+  /** ptr contains a `void*'. Won't be freed by MiniPS::delete0(). */
   class Void: public Value { public:
     inline Void(void *ptr_) { ptr=ptr_; ty=T_VOID; }
     inline void *getPtr() const { return ptr; }

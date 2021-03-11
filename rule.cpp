@@ -4,7 +4,9 @@
  */
 
 #ifdef __GNUC__
+#ifndef __clang__
 #pragma implementation
+#endif
 #endif
 
 #include "rule.hpp"
@@ -99,7 +101,7 @@ static class ValueDeleter {
 static const slen_t SampleFormat_MAXLEN=32;
 static void init_dicts() {
   register MiniPS::Dict*y;
- 
+
   /** TODO: Make this thread-safe. */
   if (y_FileFormat!=NULLP) return;
 
@@ -384,7 +386,7 @@ void Rule::OutputRule::fromDict(MiniPS::VALUE dict_) {
   }
   //MiniPS::dump(Predictor);
   // fprintf(stderr,"cpred=%u\n", cache.Predictor);
-  
+
   if ((MiniPS::VALUE)dictHints==MiniPS::Qnull) dict->put("/Hints", (MiniPS::VALUE)(dictHints=new MiniPS::Dict()));
   MiniPS::scanf_dict((MiniPS::VALUE)dictHints, /*show_warnings:*/true,
     "EncoderBPL",      MiniPS::S_PINTEGER,MiniPS::Qinteger(0),   &EncoderBPL,
@@ -580,17 +582,17 @@ void Rule::OutputRule::appendTransferSpec(GenBuffer::Writable &out) const {
 
 /* --- */
 
-static Rule::Applier *first=(Rule::Applier*)NULLP;
+static Rule::Applier *first_rule=(Rule::Applier*)NULLP;
 
 void Rule::register0(Rule::Applier *anew) {
   param_assert(anew!=NULLP);
-  anew->next=first;
-  first=anew;
+  anew->next=first_rule;
+  first_rule=anew;
 }
 
 unsigned Rule::printAppliers(GenBuffer::Writable &out) {
   unsigned num=0;
-  Applier *p=first;
+  Applier *p=first_rule;
   while (p!=(Applier*)NULLP) {
     if (p->check_rule!=0/*NULLP*/ && p->work!=0/*NULLP*/) { num++;  out << ' ' << p->format; }
     p=p->next;
@@ -615,7 +617,7 @@ Rule::OutputRule* Rule::buildProfile(MiniPS::VALUE Profile, bool quiet) {
     /* val: each OutputRule of the Profile */
     or_->fromDict(*val);
     or_->c=c;
-    Applier *p=first;
+    Applier *p=first_rule;
     // printf("building: %s...\n", p->format);
     #if !USE_BUILTIN_LZW
       if (or_->cache.Compression==or_->cache.CO_LZW && lzw_warning) {
@@ -670,7 +672,7 @@ void Rule::applyProfile(GenBuffer::Writable& out, OutputRule*rule_list, Image::S
     Error::sev(Error::NOTICE_DEFER) << "applyProfile: trying OutputRule #" << or_->c << (Error*)0;
     if (sf->setSampleFormat(or_->cache.SampleFormat, or_->cache.WarningOK, /*TryOnly*/true, or_->cache.Transparent)) {
       /* image supports the SampleFormat of OutputRule */
-      Applier *p=first;
+      Applier *p=first_rule;
       while (p!=NULLP) {
         /* ^^^ Try each output Applier for the current candidate OutputRule */
         if (p->check_rule!=0/*NULLP*/ && p->work!=0/*NULLP*/) {
@@ -682,7 +684,7 @@ void Rule::applyProfile(GenBuffer::Writable& out, OutputRule*rule_list, Image::S
            case Applier::OK:
             // if (or_->c!=0) {
             delete Error::getRecorded(); Error::popPolicy();
-            Error::sev(Error::NOTICE) << "applyProfile: applied OutputRule #" << or_->c << (Error*)0;
+            Error::sev(Error::NOTICE) << "applyProfile: applied OutputRule #" << or_->c << " using applier " << p->format << (Error*)0;
             return;
            /* case Applier::MAYBE: impossible */
            // case p->DONT_KNOW: ;
@@ -805,7 +807,7 @@ void Rule::writeTTE(
   p=template_;
   bool nzp, scp;
   SimBuffer::B scf;
-  while (1) {  
+  while (1) {
     assert(template_==p);
     while (*p!='`' && *p!='\0') p++; /* '`' is the escape character */
     if (p!=template_) out.vi_write(template_, p-template_);
@@ -888,7 +890,7 @@ void Rule::writeTTE(
      case 'O': /* 0..1 /Decode values */
       i=1;
       emit_Decode:
-      j=img->getCpp(); 
+      j=img->getCpp();
       out << "0 " << i;
       while (j--!=1) out << " 0 " << i;
       break;

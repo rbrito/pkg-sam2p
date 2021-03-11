@@ -38,7 +38,9 @@ Free Software Foundation, Inc., 59 Temple Place Suite 330, Boston, MA
 /* #define cxxintern extern */
 
 #ifdef __GNUC__
+#ifndef __clang__
 #pragma implementation
+#endif
 #endif
 
 /* misc_types.h by pts@fazekas.hu at Sat Jul  6 19:20:17 CEST 2002 */
@@ -2389,7 +2391,7 @@ s_CFD_process(stream_state * st, stream_cursor_read * pr,
     int k_left = ss->k_left;
     int rows_left = ss->rows_left;
     int status = 0;
-    
+
     (void)last; /**** pts ****/
 
 #ifdef DEBUG
@@ -3022,7 +3024,6 @@ stream_move(stream_cursor_read * pr, stream_cursor_write * pw)
     #endif
     return status;
 }
-                                                        
 
 #if 1 /**** pts ****/
 /* Stream template */

@@ -46,7 +46,9 @@ exit
  */
 
 #ifdef __GNUC__
+#ifndef __clang__
 #pragma implementation
+#endif
 #endif
 
 #if _MSC_VER > 1000
@@ -63,23 +65,23 @@ exit
  * Copyright (c) 1988-1997 Sam Leffler
  * Copyright (c) 1991-1997 Silicon Graphics, Inc.
  *
- * Permission to use, copy, modify, distribute, and sell this software and 
+ * Permission to use, copy, modify, distribute, and sell this software and
  * its documentation for any purpose is hereby granted without fee, provided
  * that (i) the above copyright notices and this permission notice appear in
  * all copies of the software and related documentation, and (ii) the names of
  * Sam Leffler and Silicon Graphics may not be used in any advertising or
  * publicity relating to the software without the specific, prior written
  * permission of Sam Leffler and Silicon Graphics.
- * 
- * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
- * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
- * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
- * 
+ *
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+ *
  * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
  * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
  * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
- * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
- * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
  * OF THIS SOFTWARE.
  */
 
@@ -192,7 +194,7 @@ static void TIFFReverseBits(unsigned char *, unsigned long);
  *
  * The original Berkeley copyright notice appears below in its entirety.
  */
- 
+
 #include <assert.h>
 /* #include <stdio.h> */
 
@@ -577,14 +579,14 @@ LZWDecode(TIFF* tif, tidataval_t* op0, tsize_t occ0)
 			nbits = BITS_MIN;
 			nbitsmask = MAXCODE(BITS_MIN);
 			maxcodep = sp->dec_codetab + nbitsmask-1;
-			
+
 #if 1 /**** pts ****/
 			NextCode(tif, sp, bp, code, GetNextCode);
 			if (code == CODE_EOI)
 				break;
 			*op++ = code, occ--;
 			oldcodep = sp->dec_codetab + code; /* ! */
-#endif			
+#endif
 			continue;
 		}
 		codep = sp->dec_codetab + code;
@@ -912,16 +914,16 @@ LZWPreEncode(TIFF* tif)
 /*
  * Encode a chunk of pixels.
  *
- * Uses an open addressing double hashing (no chaining) on the 
+ * Uses an open addressing double hashing (no chaining) on the
  * prefix code/next character combination.  We do a variant of
  * Knuth's algorithm D (vol. 3, sec. 6.4) along with G. Knott's
  * relatively-prime secondary probe.  Here, the modular division
- * first probe is gives way to a faster exclusive-or manipulation. 
+ * first probe is gives way to a faster exclusive-or manipulation.
  * Also do block compression with an adaptive reset, whereby the
  * code table is cleared when the compression ratio decreases,
  * but after the table fills.  The variable-length output codes
  * are re-sized at this point, and a CODE_CLEAR is generated
- * for the decoder. 
+ * for the decoder.
  */
 static int
 LZWEncode(TIFF* tif, tidataval_t* bp, tsize_t cc)
@@ -1106,7 +1108,7 @@ LZWPostEncode(TIFF* tif)
 		sp->enc_oldcode = (hcode_t) -1;
 	}
 	PutNextCode(op, CODE_EOI);
-	if (nextbits > 0) 
+	if (nextbits > 0)
 		*op++ = (unsigned char)(nextdata << (8-nextbits));
 	tif->tif_rawcc = (tsize_t)(op - tif->tif_rawdata);
 	return (1);
@@ -1151,6 +1153,7 @@ LZWCleanup(TIFF* tif)
 		_TIFFfree(tif->tif_data);
 		tif->tif_data = NULL;
 	}
+	_TIFFfree(tif->tif_rawdata);
 }
 
 static int
@@ -1388,7 +1391,7 @@ static int lzw_decode(FILE *sin, FILE *sout) {
      #endif
       while (got--!=0) { tif.tif_rawdata[got]=tif.tif_rawcp[got]; }
     }
-#if 0   
+#if 0
     if (!LZWPostDecode(&tif)) { LZWCleanup(&tif); return 0; } /* for each strip */
 #endif
     LZWCleanup(&tif);
@@ -1413,8 +1416,8 @@ static int feeder(char *readbuf, unsigned readlen, TIFF *tif) {
     }
   } else {
     if (!LZWPostEncode(tif)) goto e1;
-    LZWCleanup(tif);
     if (!TIFFFlushData1(tif)) goto e2;
+    LZWCleanup(tif);
   }
   return 1;
 }
@@ -1448,7 +1451,7 @@ int main(int argc, char **argv) {
   filter_t filter;
   FILE *sin, *sout;
   inname="STDIN";
-  
+
   if (argc>=2 && argc<=4 && argv[1][0]=='e') {
     filter=lzw_encode;
   } else if (argc>=2 && argc<=4 && argv[1][0]=='d') {

@@ -9,14 +9,20 @@
   The Graphics Interchange Format(c) is the Copyright property of
   CompuServe Incorporated. GIF(sm) is a Service Mark property of
   CompuServe Incorporated.
-*/         
+*/
 
 #ifdef __GNUC__
+#ifndef __clang__
 #pragma implementation
 #endif
+#endif
 
+#ifdef USE_GNU_SOURCE_INSTEAD_OF_POSIX_SOURCE
+#define _GNU_SOURCE 1  /* Implies _POSIX_C_SOURCE and _POSIX_C_SOURCE >= 2. */
+#else
 #define _POSIX_SOURCE 1
 #define _POSIX_C_SOURCE 2
+#endif
 
 #include "config2.h" /* SUXX, ignores features.h */
 
@@ -53,12 +59,12 @@ static Image::Sampled *in_gif_reader(Image::Loader::UFD *ufd, SimBuffer::Flat co
   // fprintf(stderr, "transp=%d\n", sp->transp);
   if (sp->transp!=-1) img->setTransp(sp->transp);
   /* ^^^ comment out this line to ignore transparency of the GIF file */
-  
+
   assert(1L*sp->ImageDesc.Width*sp->ImageDesc.Height<=img->end_()-img->getRowbeg());
   memcpy(img->getRowbeg(), sp->RasterBits, (slen_t)sp->ImageDesc.Width*sp->ImageDesc.Height);
 
   CGIFFF DGifCloseFile(giff); /* also frees memory structure */
-  
+
   return img;
 }
 

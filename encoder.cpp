@@ -9,7 +9,9 @@
 /* Imp: add zlib */
 
 #ifdef __GNUC__
+#ifndef __clang__
 #pragma implementation
+#endif
 #endif
 
 
@@ -42,6 +44,7 @@ class ASCII85Encode: public PSEncoder {
   virtual void vi_write(char const*buf, slen_t len);
 
  protected:
+  void wencoded(char const *encoded);
   void wout(unsigned PTS_INT32_T buf_);
   unsigned maxcpl;
   /** Number of digits available in this line */
@@ -50,6 +53,7 @@ class ASCII85Encode: public PSEncoder {
   unsigned ascii85left;
   unsigned PTS_INT32_T ascii85buf;
   char *obuf, *obufend, *op;
+  char dscst;  /* For converting `%%' to `% %' to avoid DSC parser errors */
 };
 
 /** Doesn't output EOD (end-of-data) marker `>' */
@@ -90,7 +94,7 @@ class FlateEncode: public PSEncoder {
   // static bool locked;
   /** Writable that this filter writes to */
   GenBuffer::Writable &out;
-  char workspace[ZLIB_DEFLATE_WORKSPACESIZE_MIN]; /* big, about 300k */
+  char workspace[ZLIB_DEFLATE_WORKSPACESIZE_MIN]; /* big, about 270k */
   char obuf[4096];
   /*struct*/ z_stream zs;
 #else /* old, ripped from Info-ZIP 2.2 */
@@ -518,8 +522,42 @@ ASCII85Encode::ASCII85Encode(GenBuffer::Writable &out_, unsigned maxcpl_)
  :maxcpl(maxcpl_)
  ,out(out_)
  ,ascii85breaklen(maxcpl_)
- ,ascii85left(4) {
+ ,ascii85left(4)
+ ,dscst(1) {
   obufend=(op=obuf=new char[4096])+4096;
+}
+
+void ASCII85Encode::wencoded(char const *cp) {
+  for (; *cp!='\0'; ) {
+    if (op==obufend) out.vi_write(op=obuf, obufend-obuf);
+    // if (*cp<='!') { fprintf(stderr, "e=%d.\n", cp-encoded); }
+    assert(*cp>='!');
+    assert(*cp<='~');
+    if (dscst) {
+      if (dscst == 1) {
+        dscst = (*cp == '%') ? 2 : 0;
+      } else {  /* if (dscst == 2) { */
+        if (*cp == '%') {
+          if (--ascii85breaklen == 0) {
+            *op++ = '\n';
+            ascii85breaklen = maxcpl;
+          } else {
+            /* Add space for `% %' instead of `%%' at BOL. */
+            *op++ = ' ';
+          }
+          if (op==obufend) out.vi_write(op=obuf, obufend-obuf);
+        }
+        dscst = 0;
+      }
+    }
+    *op++=*cp++;
+    if (--ascii85breaklen == 0) {
+      if (op==obufend) out.vi_write(op=obuf, obufend-obuf);
+      *op++='\n';
+      ascii85breaklen = maxcpl;
+      dscst = 1;
+    }
+  } /* NEXT */
 }
 
 void ASCII85Encode::vi_write(char const*buf, slen_t len) {
@@ -546,19 +584,7 @@ void ASCII85Encode::vi_write(char const*buf, slen_t len) {
       encoded[3] = (w1 / 85) + '!';
       encoded[4] = (w1 % 85) + '!';
       encoded[5-ascii85left] = '\0';
-      char* cp;
-      for (cp = encoded; *cp!='\0'; ) {
-        if (op==obufend) out.vi_write(op=obuf, obufend-obuf);
-        // if (*cp<='!') { fprintf(stderr, "e=%d.\n", cp-encoded); }
-        assert(*cp>='!');
-        assert(*cp<='~');
-        *op++=*cp++;
-        if (--ascii85breaklen == 0) {
-          if (op==obufend) out.vi_write(op=obuf, obufend-obuf);
-          *op++='\n';
-          ascii85breaklen = maxcpl;
-        }
-      } /* NEXT */
+      wencoded(encoded);
     } /* IF */
     if (op!=obuf) out.vi_write(obuf, op-obuf); /* flush buffer cache */
     out.vi_write("~>",2); out.vi_write(0,0);
@@ -603,18 +629,7 @@ void ASCII85Encode::wout(unsigned PTS_INT32_T buf_) {
   } else {
     encoded[0] = 'z', encoded[1] = '\0';
   }
-  char* cp;
-  for (cp = encoded; *cp!='\0'; ) {
-    if (op==obufend) out.vi_write(op=obuf, obufend-obuf);
-    assert(*cp>='!');
-    assert(*cp<='~');
-    *op++=*cp++;
-    if (--ascii85breaklen == 0) {
-      if (op==obufend) out.vi_write(op=obuf, obufend-obuf);
-      *op++='\n';
-      ascii85breaklen = maxcpl;
-    }
-  }
+  wencoded(encoded);
 }
 
 /* --- */
@@ -836,7 +851,7 @@ void FlateEncode::vi_write(char const*buf, slen_t len) {
     return;
   }
   assert(fs!=NULL);
-  
+
   /* From rfc1950.txt:
            Adler-32 is composed of two sums accumulated per byte: s1 is
            the sum of all bytes, s2 is the sum of all s1 values. Both sums
@@ -1103,7 +1118,7 @@ void GSEncode::P::vi_check() {
 
 PSEncoder* PSEncoder::newASCIIHexEncode(GenBuffer::Writable &out_,unsigned maxcpl_) {
   // SimBuffer::B fp; (fp << maxcpl_ << " pop/ASCIIHexEncode").term0();
-  // PSEncoder *ret=new GSEncode(out_, fp());  
+  // PSEncoder *ret=new GSEncode(out_, fp());
   PSEncoder *ret=new ASCIIHexEncode(out_,maxcpl_);
   // ret->shortname="AHx";  ret->longname="ASCIIHex";
   // ret->filter_psname << fp;
@@ -1238,7 +1253,7 @@ PSEncoder* PSEncoder::newDCTEncode(GenBuffer::Writable &out_,
   /* Imp: respect QFactor (double) */
   /* Imp: respect QuantTables */
   /* Imp: respect numHuffTables, HuffTables */
-  
+
   SimBuffer::B fp("<<");
   fp << "/Columns " << Columns
      << "/Rows " << Rows
@@ -1307,11 +1322,11 @@ void TIFFPredictor2::vi_write(char const*buf, slen_t len) {
       i=*p++;
       d=(i>>7); o =((d-((h>>bpccpp)))&1)<<7; h=(h<<1)|d;
       d=(i>>6); o|=((d-((h>>bpccpp)))&1)<<6; h=(h<<1)|d;
-      d=(i>>5); o|=((d-((h>>bpccpp)))&1)<<5; h=(h<<1)|d;        
+      d=(i>>5); o|=((d-((h>>bpccpp)))&1)<<5; h=(h<<1)|d;
       d=(i>>4); o|=((d-((h>>bpccpp)))&1)<<4; h=(h<<1)|d;
-      d=(i>>3); o|=((d-((h>>bpccpp)))&1)<<3; h=(h<<1)|d;        
+      d=(i>>3); o|=((d-((h>>bpccpp)))&1)<<3; h=(h<<1)|d;
       d=(i>>2); o|=((d-((h>>bpccpp)))&1)<<2; h=(h<<1)|d;
-      d=(i>>1); o|=((d-((h>>bpccpp)))&1)<<1; h=(h<<1)|d;        
+      d=(i>>1); o|=((d-((h>>bpccpp)))&1)<<1; h=(h<<1)|d;
       d=(i   ); o|=((d-((h>>bpccpp)))&1)   ; h=(h<<1)|d;
       *op++=o;
       if (--opleft==0) { h=0; out.vi_write((char*)obuf,rlen); op=obuf; opleft=rlen; }
@@ -1321,7 +1336,7 @@ void TIFFPredictor2::vi_write(char const*buf, slen_t len) {
       i=*p++;
       d=(i>>6); o =((d-((h>>bpccpp)))&3)<<6; h=(h<<2)|d; // fprintf(stderr,"d=%#x\n", d);
       d=(i>>4); o|=((d-((h>>bpccpp)))&3)<<4; h=(h<<2)|d;
-      d=(i>>2); o|=((d-((h>>bpccpp)))&3)<<2; h=(h<<2)|d;        
+      d=(i>>2); o|=((d-((h>>bpccpp)))&3)<<2; h=(h<<2)|d;
       d=(i   ); o|=((d-((h>>bpccpp)))&3)   ; h=(h<<2)|d;
       *op++=o;
       if (--opleft==0) { h=0; out.vi_write((char*)obuf,rlen); op=obuf; opleft=rlen; }
@@ -1339,7 +1354,7 @@ void TIFFPredictor2::vi_write(char const*buf, slen_t len) {
       i=*p++; *op++=((i-((h>>bpccpp)))/*&255*/); h=(h<<8)|i;
       if (--opleft==0) { h=0; out.vi_write((char*)obuf,rlen); op=obuf; opleft=rlen; }
     }
-  } else assert(0);  
+  } else assert(0);
 }
 
 /* --- */

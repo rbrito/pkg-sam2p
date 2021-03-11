@@ -1,11 +1,12 @@
 /* image.hpp -- classes for sampled (indexed, gray and rgb) images
  * by pts@fazekas.hu Wed Feb 27 09:24:47 CET 2002
  */
-/* Imp: find memory leaks */
 /* Imp: keep future transparency in toIndexed(...) */
 
 #ifdef __GNUC__
+#ifndef __clang__
 #pragma interface
+#endif
 #endif
 
 #ifndef SAMPLED_HPP
@@ -29,6 +30,7 @@ class Image {
    * ...
    * rowbeg+(h-1)*rlen..rowbeg+h*rlen-1: sample data of the last row
    * trail..beg+len: trailer, ignored. Its length must be >=bpc.
+   * TODO: Remove trail, and see what breaks (e.g. setBpc).
    */
   class Sampled: public SimBuffer::Flat {
    public:
@@ -145,7 +147,7 @@ class Image {
      */
     virtual Sampled* addAlpha(/*Image::*/Gray *al) =0;
     /** assert(al.bpp=8) etc. Imp: document this */
-    static Indexed* addAlpha0(Sampled *img, Gray *al);
+    static Indexed* addAlpha0(Indexed *iimg, Gray *al);
   };
 
   class Indexed: public Sampled {
@@ -168,6 +170,14 @@ class Image {
     void setTransp(unsigned char coloridx);
     /** @return new hasTransp */
     bool setTranspc(rgb_t color);
+    /** Returns like setTranspc, but doesn't change the image.
+     * @return new hasTransp
+     */
+    bool wouldSetTranspc(rgb_t color) const;
+    /** Like setTranspc, but if it makes any changes, then it calls
+     * packPal() and changes back bpc to its old value.
+     */
+    void setTranspcAndRepack(rgb_t color);
     virtual void copyRGBRow(char *to, dimen_t whichrow) const;
     /* virtual bool hasPixelRGB(Image::Sampled::rgb_t rgb) const; */
     /** Packs (compresses) the palette so that it will be continuous in
@@ -356,7 +366,8 @@ class Image {
      * @param Transparent: as part of the conversion, try to make this RGB color
      *        transparent
      * @return true iff the conversion succeeded. Note that img may be the same
-     *         pointer even when true is returned
+     *         pointer even when true is returned. If false is returned, keeps
+     *         the image unchanged.
      */
     bool setSampleFormat(sf_t sf, bool WarningOK, bool TryOnly, Sampled::rgb_t Transparent);
     inline Indexed **getImgs() const { return imgs; }

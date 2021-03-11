@@ -38,7 +38,7 @@ exit
   #endif
   typedef char sbool;
   #if ';'!=59 || 'a'!=97
-  #  error ASCII system is required to compile this program
+  #  error ASCII system is required to compile this program.
   #endif
 #else
   #include "config2.h" /* by sam2p... */
@@ -151,7 +151,7 @@ static void ungetcc(int c) {
 }
 
 static void erri(char const*msg1, char const*msg2) {
-  fprintf(stderr, "%s: error at %"SLEN_P"u.%"SLEN_P"u.%"SLEN_P"u: %s%s\n",
+  fprintf(stderr, "%s: error at %" SLEN_P "u.%" SLEN_P "u.%" SLEN_P "u: %s%s\n",
     PROGNAME, curline, curofs-leftofs+1, curofs, msg1, msg2?msg2:"");
   exit(3);
 }
@@ -230,7 +230,7 @@ static sbool is_wordx(char const *s) {
 /** @param b: assume null-terminated @return true on error */
 static /*inline*/ sbool toInteger(char *s, psint_t *ret) {
   int n=0; /* BUGFIX?? found by __CHECKER__ */
-  return sscanf(s, "%"SLEN_P"i%n", ret, &n)<1 || s[n]!='\0';
+  return sscanf(s, "%" SLEN_P "i%n", ret, &n)<1 || s[n]!='\0';
 }
 
 /** @param b: assume null-terminated @return true on error */
@@ -252,7 +252,7 @@ static char gettok(void) {
   char *ibufend=ibuf+IBUFSIZE;
   ibufb=ibuf;
 
-#if 0  
+#if 0
   if (ungot==EOFF) return EOFF;
   if (ungot!=NO_UNGOT) { c=ungot; ungot=NO_UNGOT; goto again; }
 #endif
@@ -339,7 +339,7 @@ static char gettok(void) {
       if (ibufb==ibufend) erri("str literal too long",0);
       /* putchar(c); */
       *ibufb++=c;
-    } /* WHILE */    
+    } /* WHILE */
     /* if (c==')') return '('; */
     uf_str: erri("unfinished str",0);
    case ')': goto err;
@@ -490,7 +490,7 @@ static slen_t pstrqlen(register char const* p, char const* pend) {
  */
 static void pstrqput(register char const* p, char const* pend) {
   char c;
-  putchar('('); 
+  putchar('(');
   p=ibuf; pend=ibufb;  while (p!=pend) {
     if ((ULE((c=*(unsigned char const*)p++)-32, 126-32) && c!='(' && c!=')')
      || (c=='\n' && pstrq_litn_pp==1)
@@ -700,7 +700,7 @@ int main(int argc, char**argv) {
   getotag("Abbr");
   getkey("acount");  acount=getuintval();
   getkey("xcount");  xcount=getuintval();
-  sprintf(tmp,"%"SLEN_P"u dict%%</I>", acount+xcount);
+  sprintf(tmp,"%" SLEN_P "u dict%%</I>", acount+xcount);
   setifmt(tmp,0); copy("I"); noifmt();
   gettagbeg();
 
@@ -721,7 +721,7 @@ int main(int argc, char**argv) {
       words[E_SYNTAX];
     for (c=127;c<WORDSSIZE;c++) words[c]=words[E_RANGE];
   }
-  
+
   { char tok;
     slen_t len;
     int c;
@@ -796,7 +796,7 @@ int main(int argc, char**argv) {
   copy("Test");
 
   getotag("S");
-  getkey("len");  (void)getuintval(); /* Imp: verify slen for overruns */ 
+  getkey("len");  (void)getuintval(); /* Imp: verify slen for overruns */
   gettagbeg();
   setifmt("{%</I>",0); copy("I"); noifmt(); /*}*/
   copy("S");
@@ -837,7 +837,7 @@ int main(int argc, char**argv) {
   getotag("True");
   gettagbeg();
   copy("True");
-  
+
   setifmt("}{currentfile token pop pop%</I>",0);
   copy("I"); noifmt();
 
@@ -867,8 +867,8 @@ int main(int argc, char**argv) {
       fputs("%%Trailer\n%%EOF\n", stdout);
     } else erri("tag %<Data or %<Fini expected",0);
   }
-  
+
   if (gettok()!=0) erri("premature EOF",0);
-  
+
   return 0;
 }
