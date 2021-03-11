@@ -1,6 +1,6 @@
-sam2p (0.49.2-4~1.gbp86f2a0) UNRELEASED; urgency=medium
+sam2p (0.49.2-4~2.gbp657a8a) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @86f2a0f355997f1609b6547819ecf70d2540953d **
+  ** SNAPSHOT build @657a8a32cd4bdb6c537e3d9b08f99841c5efe14f **
 
   * Trim trailing whitespace.
   * debian/control:
@@ -18,8 +18,9 @@ sam2p (0.49.2-4~1.gbp86f2a0) UNRELEASED; urgency=medium
     + Avoid explicitly specifying -Wl,--as-needed linker flag.
   * debian/upstream: Set metadata fields: Bug-Database, Bug-Submit,
     Repository, Repository-Browse.
+  * debian/{compat,control}: Migrate to virtual 'debhelper-compat (= 13)'.
 
- -- Rogério Brito <rbrito@gmail.com>  Fri, 26 Feb 2021 20:47:02 -0300
+ -- Rogério Brito <rbrito@gmail.com>  Thu, 11 Mar 2021 03:31:31 -0300
 
 sam2p (0.49.2-3) unstable; urgency=medium
 
