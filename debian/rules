@@ -6,10 +6,10 @@
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 %:
-	dh $@
+	dh $@ --without autoreconf
 
 override_dh_auto_configure:
-	dh_auto_configure -- --enable-gif --enable-lzw
+	./configure --enable-gif --enable-lzw
 
 override_dh_auto_build:
 	xsltproc --nonet -o debian/ \
