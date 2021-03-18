@@ -1,6 +1,6 @@
-sam2p (0.49.2-4~2.gbp657a8a) UNRELEASED; urgency=medium
+sam2p (0.49.4-1~3.gbpe34ba7) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @657a8a32cd4bdb6c537e3d9b08f99841c5efe14f **
+  ** SNAPSHOT build @e34ba74359294cbfd0005d2587f2988c99f9c271 **
 
   * Trim trailing whitespace.
   * debian/control:
@@ -19,8 +19,11 @@ sam2p (0.49.2-4~2.gbp657a8a) UNRELEASED; urgency=medium
   * debian/upstream: Set metadata fields: Bug-Database, Bug-Submit,
     Repository, Repository-Browse.
   * debian/{compat,control}: Migrate to virtual 'debhelper-compat (= 13)'.
+  * New upstream version 0.49.4
+  * debian/patches: Refresh patches.
+  * debian/rules: Disable autoreconf. This is an unusual package.
 
- -- Rogério Brito <rbrito@gmail.com>  Thu, 11 Mar 2021 03:31:31 -0300
+ -- Rogério Brito <rbrito@gmail.com>  Thu, 18 Mar 2021 12:04:56 -0300
 
 sam2p (0.49.2-3) unstable; urgency=medium
 
