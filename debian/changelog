@@ -1,6 +1,4 @@
-sam2p (0.49.4-1~3.gbpe34ba7) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @e34ba74359294cbfd0005d2587f2988c99f9c271 **
+sam2p (0.49.4-1) unstable; urgency=medium
 
   * Trim trailing whitespace.
   * debian/control:
@@ -16,14 +14,14 @@ sam2p (0.49.4-1~3.gbpe34ba7) UNRELEASED; urgency=medium
     + Update watch file format version to 4.
   * debian/rules:
     + Avoid explicitly specifying -Wl,--as-needed linker flag.
+    + Disable autoreconf. This is an unusual package.
   * debian/upstream: Set metadata fields: Bug-Database, Bug-Submit,
     Repository, Repository-Browse.
   * debian/{compat,control}: Migrate to virtual 'debhelper-compat (= 13)'.
   * New upstream version 0.49.4
   * debian/patches: Refresh patches.
-  * debian/rules: Disable autoreconf. This is an unusual package.
 
- -- Rogério Brito <rbrito@gmail.com>  Thu, 18 Mar 2021 12:04:56 -0300
+ -- Rogério Brito <rbrito@gmail.com>  Thu, 18 Mar 2021 12:08:54 -0300
 
 sam2p (0.49.2-3) unstable; urgency=medium
 
